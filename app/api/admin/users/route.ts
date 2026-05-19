@@ -11,7 +11,12 @@ import { logEvent } from "@/lib/server/logger";
 import { getClientIp } from "@/lib/server/request";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { adminUserCreateSchema, paginationSchema } from "@/lib/server/validators";
-import { createUser, listUsers } from "@/lib/server/users";
+import {
+  createUser,
+  findUserByEmail,
+  findUserByUsername,
+  listUsers,
+} from "@/lib/server/users";
 
 export const runtime = "nodejs";
 const ADMIN_LOCAL_DOMAIN = "admin.local";
@@ -100,6 +105,19 @@ export async function POST(req: NextRequest) {
     const { data } = await readJsonBody(req, adminUserCreateSchema);
     const providedUsername = data.username;
     const providedEmail = data.email;
+    if (providedUsername) {
+      const existingByUsername = await findUserByUsername(providedUsername);
+      if (existingByUsername) {
+        throw new ApiError(409, "username_taken", "Username ja cadastrado");
+      }
+    }
+    if (providedEmail) {
+      const existingByEmail = await findUserByEmail(providedEmail);
+      if (existingByEmail) {
+        throw new ApiError(409, "email_taken", "E-mail ja cadastrado");
+      }
+    }
+
     const usernameSeed =
       providedUsername ??
       deriveUsernameFromEmail(providedEmail) ??
@@ -127,7 +145,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (!created) {
-      throw new ApiError(400, "user_conflict", "User already exists");
+      if (providedUsername) {
+        const existingByUsername = await findUserByUsername(providedUsername);
+        if (existingByUsername) {
+          throw new ApiError(409, "username_taken", "Username ja cadastrado");
+        }
+      }
+      if (providedEmail) {
+        const existingByEmail = await findUserByEmail(providedEmail);
+        if (existingByEmail) {
+          throw new ApiError(409, "email_taken", "E-mail ja cadastrado");
+        }
+      }
+      throw new ApiError(409, "user_conflict", "Ja existe um usuario com as credenciais informadas");
     }
 
     await logEvent({

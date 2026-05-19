@@ -69,9 +69,10 @@ export default function AdminPage() {
 
   async function handleRoleChange(userId: string, role: AdminUser["role"]) {
     setUpdatingId(userId);
-    const ok = await updateUserRole(userId, role);
-    if (!ok) {
-      setNotice({ kind: "error", text: "Não foi possível atualizar o papel." });
+    setNotice(null);
+    const result = await updateUserRole(userId, role);
+    if (!result.ok) {
+      setNotice({ kind: "error", text: result.message });
       setUpdatingId(null);
       return;
     }
@@ -103,7 +104,8 @@ export default function AdminPage() {
     }
 
     setCreating(true);
-    const created = await createAdminUser({
+    setNotice(null);
+    const result = await createAdminUser({
       username: username || undefined,
       email: email || undefined,
       password,
@@ -112,10 +114,11 @@ export default function AdminPage() {
     });
     setCreating(false);
 
-    if (!created) {
-      setNotice({ kind: "error", text: "Não foi possível criar o usuário." });
+    if (!result.ok) {
+      setNotice({ kind: "error", text: result.message });
       return;
     }
+    const created = result.data;
 
     const generatedParts: string[] = [];
     if (created.generated.username) {
@@ -143,11 +146,12 @@ export default function AdminPage() {
     if (!confirmed) return;
 
     setDeletingId(user.id);
-    const ok = await deleteAdminUser(user.id);
+    setNotice(null);
+    const result = await deleteAdminUser(user.id);
     setDeletingId(null);
 
-    if (!ok) {
-      setNotice({ kind: "error", text: "Não foi possível excluir o usuário." });
+    if (!result.ok) {
+      setNotice({ kind: "error", text: result.message });
       return;
     }
 

@@ -47,31 +47,31 @@ export async function PATCH(
 
     const { id: targetId } = await context.params;
     if (!targetId) {
-      throw new ApiError(400, "invalid_user", "Invalid user");
+      throw new ApiError(400, "invalid_user", "Usuario invalido");
     }
     if (targetId === session.userId) {
-      throw new ApiError(400, "self_role_change_forbidden", "Operation not allowed");
+      throw new ApiError(400, "self_role_change_forbidden", "Nao e permitido alterar o proprio papel");
     }
 
     const { data } = await readJsonBody(req, userRoleUpdateSchema);
     const target = await findUserById(targetId);
     if (!target) {
-      throw new ApiError(404, "user_not_found", "User not found");
+      throw new ApiError(404, "user_not_found", "Usuario nao encontrado");
     }
     if (target.role === data.role) {
-      throw new ApiError(400, "no_effective_change", "No role change");
+      throw new ApiError(400, "no_effective_change", "O usuario ja possui este papel");
     }
 
     if (target.role === "admin" && data.role !== "admin") {
       const totalAdmins = await countUsersByRole("admin");
       if (totalAdmins <= 1) {
-        throw new ApiError(400, "last_admin_protection", "Operation not allowed");
+        throw new ApiError(400, "last_admin_protection", "Nao e permitido alterar o papel do ultimo administrador");
       }
     }
 
     const updated = await updateUserRole(targetId, data.role);
     if (!updated) {
-      throw new ApiError(404, "user_not_found", "User not found");
+      throw new ApiError(404, "user_not_found", "Usuario nao encontrado");
     }
 
     await logEvent({

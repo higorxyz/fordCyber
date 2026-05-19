@@ -54,27 +54,27 @@ export async function DELETE(
 
     const { id: targetId } = await context.params;
     if (!targetId) {
-      throw new ApiError(400, "invalid_user", "Invalid user");
+      throw new ApiError(400, "invalid_user", "Usuario invalido");
     }
     if (targetId === session.userId) {
-      throw new ApiError(400, "self_delete_forbidden", "Operation not allowed");
+      throw new ApiError(400, "self_delete_forbidden", "Nao e permitido excluir o proprio usuario");
     }
 
     const target = await findUserById(targetId);
     if (!target) {
-      throw new ApiError(404, "user_not_found", "User not found");
+      throw new ApiError(404, "user_not_found", "Usuario nao encontrado");
     }
 
     if (target.role === "admin") {
       const totalAdmins = await countUsersByRole("admin");
       if (totalAdmins <= 1) {
-        throw new ApiError(400, "last_admin_protection", "Operation not allowed");
+        throw new ApiError(400, "last_admin_protection", "Nao e permitido excluir o ultimo administrador");
       }
     }
 
     const deleted = await deleteUserById(targetId);
     if (!deleted) {
-      throw new ApiError(404, "user_not_found", "User not found");
+      throw new ApiError(404, "user_not_found", "Usuario nao encontrado");
     }
 
     await revokeAllSessions(targetId);

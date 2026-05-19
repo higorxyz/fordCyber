@@ -48,6 +48,10 @@ export default function SessionsPage() {
     setActionId(sessionId);
     const ok = await revokeSession(sessionId);
     if (ok) {
+      if (sessionId === currentSessionId) {
+        router.replace("/");
+        return;
+      }
       const data = await fetchSessions();
       setSessions(data.items);
       setCurrentSessionId(data.currentSessionId);

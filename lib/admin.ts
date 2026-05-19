@@ -65,6 +65,28 @@ export type AdminUserCreateResponse = {
   };
 };
 
+type ApiErrorResponse = {
+  error?: {
+    code?: string;
+    message?: string;
+    requestId?: string;
+  };
+};
+
+type AdminActionError = {
+  ok: false;
+  message: string;
+  code?: string;
+  status?: number;
+};
+
+export type AdminActionResult<T> =
+  | {
+      ok: true;
+      data: T;
+    }
+  | AdminActionError;
+
 export async function fetchUsers(limit = 50): Promise<AdminUser[]> {
   const res = await fetch(`/api/admin/users?limit=${limit}`, { cache: "no-store" });
   if (!res.ok) return [];
@@ -72,9 +94,37 @@ export async function fetchUsers(limit = 50): Promise<AdminUser[]> {
   return data.items ?? [];
 }
 
-export async function updateUserRole(userId: string, role: AdminUser["role"]) {
+async function parseAdminError(res: Response, fallbackMessage: string): Promise<AdminActionError> {
+  try {
+    const data = (await res.json()) as ApiErrorResponse;
+    const message = data.error?.message?.trim();
+    return {
+      ok: false,
+      message: message && message.length > 0 ? message : fallbackMessage,
+      code: data.error?.code,
+      status: res.status,
+    };
+  } catch {
+    return {
+      ok: false,
+      message: fallbackMessage,
+      status: res.status,
+    };
+  }
+}
+
+export async function updateUserRole(
+  userId: string,
+  role: AdminUser["role"]
+): Promise<AdminActionResult<AdminUser>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return false;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
+
   const res = await fetch(`/api/admin/users/${userId}/role`, {
     method: "PATCH",
     headers: {
@@ -83,12 +133,28 @@ export async function updateUserRole(userId: string, role: AdminUser["role"]) {
     },
     body: JSON.stringify({ role }),
   });
-  return res.ok;
+
+  if (!res.ok) {
+    return parseAdminError(res, "Nao foi possivel atualizar o papel do usuario");
+  }
+
+  return {
+    ok: true,
+    data: (await res.json()) as AdminUser,
+  };
 }
 
-export async function createAdminUser(input: AdminUserCreateInput) {
+export async function createAdminUser(
+  input: AdminUserCreateInput
+): Promise<AdminActionResult<AdminUserCreateResponse>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return null;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
+
   const payload: AdminUserCreateInput = {
     password: input.password,
     role: input.role ?? "usuario",
@@ -105,20 +171,43 @@ export async function createAdminUser(input: AdminUserCreateInput) {
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) return null;
-  return (await res.json()) as AdminUserCreateResponse;
+
+  if (!res.ok) {
+    return parseAdminError(res, "Nao foi possivel criar o usuario");
+  }
+
+  return {
+    ok: true,
+    data: (await res.json()) as AdminUserCreateResponse,
+  };
 }
 
-export async function deleteAdminUser(userId: string) {
+export async function deleteAdminUser(
+  userId: string
+): Promise<AdminActionResult<{ ok: true; id: string }>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return false;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
+
   const res = await fetch(`/api/admin/users/${userId}`, {
     method: "DELETE",
     headers: {
       "X-CSRF-Token": csrfToken,
     },
   });
-  return res.ok;
+
+  if (!res.ok) {
+    return parseAdminError(res, "Nao foi possivel excluir o usuario");
+  }
+
+  return {
+    ok: true,
+    data: (await res.json()) as { ok: true; id: string },
+  };
 }
 
 function buildQuery(filters: Record<string, string | number | undefined>) {
