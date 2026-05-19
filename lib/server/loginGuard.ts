@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { loadStore, saveStore } from "./secureStore";
+import { loadStore, purgeStore, saveStore } from "./secureStore";
 
 type LoginGuardEntry = {
   count: number;
@@ -18,8 +18,35 @@ function normalize(username: string) {
   return username.trim().toLowerCase();
 }
 
-function getStore() {
-  return loadStore<LoginGuardStore>(STORE_NAME, { items: {} });
+async function getStore() {
+  try {
+    return await loadStore<LoginGuardStore>(STORE_NAME, { items: {} });
+  } catch (error) {
+    console.warn(
+      `[login_guard] failed to load encrypted store, resetting transient state: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+    try {
+      await purgeStore(STORE_NAME);
+      await saveStore(STORE_NAME, { items: {} });
+    } catch {
+      // Keep operating with in-memory fallback even if persistence is unavailable.
+    }
+    return { items: {} };
+  }
+}
+
+async function persistStore(store: LoginGuardStore) {
+  try {
+    await saveStore(STORE_NAME, store);
+  } catch (error) {
+    console.warn(
+      `[login_guard] failed to persist transient state: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+  }
 }
 
 export async function checkLoginLock(username: string) {
@@ -35,7 +62,7 @@ export async function checkLoginLock(username: string) {
 
   if (now - entry.firstAt > config.loginGuard.windowMs) {
     delete store.items[key];
-    await saveStore(STORE_NAME, store);
+    await persistStore(store);
     return { locked: false };
   }
 
@@ -60,7 +87,7 @@ export async function recordFailedLogin(username: string, ip?: string) {
   }
 
   store.items[key] = entry;
-  await saveStore(STORE_NAME, store);
+  await persistStore(store);
 
   return {
     locked: Boolean(entry.lockedUntil && entry.lockedUntil > now),
@@ -73,6 +100,6 @@ export async function clearLoginGuard(username: string) {
   const store = await getStore();
   if (store.items[key]) {
     delete store.items[key];
-    await saveStore(STORE_NAME, store);
+    await persistStore(store);
   }
 }

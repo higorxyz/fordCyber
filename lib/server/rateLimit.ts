@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { loadStore, saveStore } from "./secureStore";
+import { loadStore, purgeStore, saveStore } from "./secureStore";
 
 type Bucket = {
   count: number;
@@ -15,12 +15,35 @@ type RateLimitStore = {
 
 const STORE_NAME = "rate_limits";
 
-function getStore() {
-  return loadStore<RateLimitStore>(STORE_NAME, { items: {} });
+async function getStore() {
+  try {
+    return await loadStore<RateLimitStore>(STORE_NAME, { items: {} });
+  } catch (error) {
+    console.warn(
+      `[rate_limit] failed to load encrypted store, resetting transient state: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+    try {
+      await purgeStore(STORE_NAME);
+      await saveStore(STORE_NAME, { items: {} });
+    } catch {
+      // Keep operating with in-memory fallback even if persistence is unavailable.
+    }
+    return { items: {} };
+  }
 }
 
-function persistStore(store: RateLimitStore) {
-  return saveStore(STORE_NAME, store);
+async function persistStore(store: RateLimitStore) {
+  try {
+    await saveStore(STORE_NAME, store);
+  } catch (error) {
+    console.warn(
+      `[rate_limit] failed to persist transient state: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+  }
 }
 
 export async function rateLimit(key: string, limit: number, windowMs: number) {
