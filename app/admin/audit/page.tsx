@@ -6,6 +6,7 @@ import Navbar from "@/components/shared/Navbar";
 import GradientCanvas from "@/components/shared/GradientCanvas";
 import { AuditEvent, AuditFilters, buildAuditCsvUrl, fetchAuditEvents, fetchMetrics, MetricsResponse } from "@/lib/admin";
 import { getRole } from "@/lib/auth";
+import { maskIpAddress } from "@/lib/ip";
 
 type FilterState = {
   type: string;
@@ -214,7 +215,7 @@ export default function AdminAuditPage() {
                         <div>{event.actorId ?? "--"}</div>
                         <div className="text-[9px] text-white/40 uppercase">{event.actorRole ?? ""}</div>
                       </td>
-                      <td className="py-3 px-2">{event.ip ?? "--"}</td>
+                      <td className="py-3 px-2">{maskIpAddress(event.ip)}</td>
                       <td className="py-3 px-2">
                         {new Date(event.createdAt).toLocaleString("pt-BR")}
                       </td>

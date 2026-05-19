@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
 import GradientCanvas from "@/components/shared/GradientCanvas";
 import { fetchSessions, getRole, logoutAll, revokeSession, SessionInfo } from "@/lib/auth";
+import { maskIpAddress } from "@/lib/ip";
 
 export default function SessionsPage() {
   const router = useRouter();
@@ -132,7 +133,7 @@ export default function SessionsPage() {
                             {session.userAgent || "User-Agent indisponível"}
                           </div>
                         </td>
-                        <td className="py-3 px-2">{session.ipAddress || "--"}</td>
+                        <td className="py-3 px-2">{maskIpAddress(session.ipAddress)}</td>
                         <td className="py-3 px-2">
                           {new Date(session.lastSeenAt).toLocaleString("pt-BR")}
                         </td>
