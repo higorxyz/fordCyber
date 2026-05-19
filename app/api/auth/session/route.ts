@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { findUserById } from "@/lib/server/auth";
 import { requireRole } from "@/lib/server/authorize";
 import { isApiError } from "@/lib/server/errors";
 import { errorResponse, getRequestId, handlePreflight, jsonResponse, requireAllowedOrigin, requireHttps } from "@/lib/server/http";
@@ -16,7 +17,12 @@ export async function GET(req: NextRequest) {
     requireHttps(req);
     requireAllowedOrigin(req);
     const session = await requireRole(req, "usuario");
-    return jsonResponse(req, { role: session.role, username: session.username }, 200);
+    const user = await findUserById(session.userId);
+    return jsonResponse(
+      req,
+      { role: session.role, username: session.username, name: user?.name },
+      200
+    );
   } catch (err) {
     if (isApiError(err)) {
       return errorResponse(req, err.status, err.code, err.safeMessage, requestId);

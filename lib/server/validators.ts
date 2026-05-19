@@ -62,6 +62,32 @@ const emailSchema = z
   .max(120)
   .transform((v) => v.trim().toLowerCase());
 
+function capitalizeNameWord(value: string) {
+  const lowered = value.toLocaleLowerCase("pt-BR");
+  if (lowered.length === 0) return lowered;
+  return lowered.charAt(0).toLocaleUpperCase("pt-BR") + lowered.slice(1);
+}
+
+function normalizeFullName(value: string) {
+  return collapseSpaces(value)
+    .split(" ")
+    .filter((part) => part.length > 0)
+    .map((part) =>
+      part
+        .split("-")
+        .filter((segment) => segment.length > 0)
+        .map(capitalizeNameWord)
+        .join("-")
+    )
+    .join(" ");
+}
+
+const fullNameSchema = safeTextSchema(3, 80)
+  .transform(normalizeFullName)
+  .refine((value) => value.split(" ").filter((part) => part.length > 0).length >= 2, {
+    message: "Informe nome e sobrenome",
+  });
+
 const loginPasswordSchema = z.string().min(4).max(72);
 const strongPasswordSchema = z
   .string()
@@ -91,6 +117,7 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
+  name: fullNameSchema,
   username: usernameSchema,
   email: emailSchema,
   password: strongPasswordSchema,

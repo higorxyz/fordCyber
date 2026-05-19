@@ -5,6 +5,7 @@ export type Role = "usuario" | "analista" | "admin";
 type SessionResponse = {
   role: Role;
   username: string;
+  name?: string;
 };
 
 type CsrfResponse = {
@@ -29,6 +30,8 @@ export type SessionInfo = {
   lastSeenAt: string;
   revokedAt?: string;
 };
+
+export type SessionProfile = SessionResponse;
 
 type SessionsResponse = {
   items: SessionInfo[];
@@ -149,6 +152,7 @@ export async function login(
 }
 
 export async function register(
+  name: string,
   username: string,
   email: string,
   password: string
@@ -166,7 +170,7 @@ export async function register(
       "Content-Type": "application/json",
       "X-CSRF-Token": csrfToken,
     },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ name, username, email, password }),
   });
   if (!res.ok) {
     return parseErrorResponse(res, "Nao foi possivel criar a conta");
@@ -184,11 +188,10 @@ export async function register(
   };
 }
 
-export async function getRole(): Promise<Role | null> {
+async function fetchSessionProfile(): Promise<SessionResponse | null> {
   const res = await fetch("/api/auth/session", { cache: "no-store" });
   if (res.ok) {
-    const data = (await res.json()) as SessionResponse;
-    return data.role ?? null;
+    return (await res.json()) as SessionResponse;
   }
 
   if (res.status === 401) {
@@ -201,11 +204,19 @@ export async function getRole(): Promise<Role | null> {
     if (!refresh.ok) return null;
     const retry = await fetch("/api/auth/session", { cache: "no-store" });
     if (!retry.ok) return null;
-    const data = (await retry.json()) as SessionResponse;
-    return data.role ?? null;
+    return (await retry.json()) as SessionResponse;
   }
 
   return null;
+}
+
+export async function getSessionProfile(): Promise<SessionProfile | null> {
+  return fetchSessionProfile();
+}
+
+export async function getRole(): Promise<Role | null> {
+  const session = await fetchSessionProfile();
+  return session?.role ?? null;
 }
 
 export async function logout() {

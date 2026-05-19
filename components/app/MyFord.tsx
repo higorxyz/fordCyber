@@ -50,12 +50,19 @@ const VEHICLE_SYSTEMS: Record<number, typeof client.systems> = {
   ],
 };
 
-export default function MyFord() {
+interface Props {
+  firstName?: string;
+}
+
+export default function MyFord({ firstName }: Props) {
   const [carIdx, setCarIdx] = useState(0);
   const [slideDir, setSlideDir] = useState(1);
   const vehicles = client.vehicles;
   const v = vehicles[carIdx];
   const systems = VEHICLE_SYSTEMS[carIdx] || client.systems;
+  const userFirstName = firstName && firstName.trim().length > 0
+    ? firstName.trim()
+    : client.name.split(" ")[0];
   const overall = Math.round(
     systems.reduce((s, x) => s + x.health, 0) / systems.length
   );
@@ -109,7 +116,7 @@ export default function MyFord() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-mono-tech text-[8px] uppercase tracking-[0.3em] text-white/30">
-                  Olá, {client.name.split(" ")[0]}
+                  Olá, {userFirstName}
                 </div>
                 <h1 className="font-display text-lg font-bold tracking-[0.08em] mt-0.5 uppercase leading-none">
                   Meu <span className="text-ford-blue-light">Ford</span>

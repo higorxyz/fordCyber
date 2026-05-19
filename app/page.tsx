@@ -126,6 +126,7 @@ function BootSequence({ onComplete }: { onComplete: () => void }) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const [fullName, setFullName] = useState("");
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -162,7 +163,12 @@ export default function LoginPage() {
     const result =
       mode === "login"
         ? await login(user.trim(), pass.trim())
-        : await register(user.trim(), email.trim(), pass.trim());
+        : await register(
+            fullName.trim(),
+            user.trim(),
+            email.trim(),
+            pass.trim()
+          );
     setLoading(false);
     if (!result.ok) {
       setError(result.message);
@@ -341,10 +347,25 @@ export default function LoginPage() {
                 />
               </div>
             )}
+            {mode === "register" && (
+              <div>
+                <label className="font-display block text-[10px] tracking-[0.3em] uppercase text-white/60 mb-2">
+                  <span className="text-ford-blue-light">[03]</span> Nome completo
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="font-mono-tech w-full bg-transparent border-b border-white/30 focus:border-ford-blue-light focus:outline-none py-2 text-white placeholder-white/25 transition-colors"
+                  placeholder="Ex.: Maria Silva"
+                  autoComplete="name"
+                />
+              </div>
+            )}
             <div>
               <label className="font-display block text-[10px] tracking-[0.3em] uppercase text-white/60 mb-2">
                 <span className="text-ford-blue-light">
-                  {mode === "login" ? "[02]" : "[03]"}
+                  {mode === "login" ? "[02]" : "[04]"}
                 </span>{" "}
                 Senha
               </label>

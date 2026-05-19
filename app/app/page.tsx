@@ -12,7 +12,7 @@ import Alerts from "@/components/app/Alerts";
 import Points from "@/components/app/Points";
 import Timeline from "@/components/app/Timeline";
 import KeyMoments from "@/components/app/KeyMoments";
-import { getRole } from "@/lib/auth";
+import { getSessionProfile } from "@/lib/auth";
 
 type Tab = "onboarding" | "myford" | "alerts" | "points" | "timeline" | "moments";
 
@@ -30,18 +30,32 @@ const tabVariants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.15 } },
 };
 
+function resolveFirstName(name: string | undefined, username: string) {
+  const source = (name?.trim() || username.trim() || "Cliente").split(/\s+/)[0] ?? "Cliente";
+  if (source.length === 0) return "Cliente";
+  return source.charAt(0).toLocaleUpperCase("pt-BR") + source.slice(1);
+}
+
 export default function ClientAppPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("onboarding");
   const [authChecked, setAuthChecked] = useState(false);
+  const [firstName, setFirstName] = useState("Cliente");
 
   useEffect(() => {
     let active = true;
-    getRole().then((role) => {
+    getSessionProfile().then((session) => {
       if (!active) return;
-      if (!role) router.push("/");
-      else if (role === "analista") router.push("/command");
-      else setAuthChecked(true);
+      if (!session) {
+        router.push("/");
+        return;
+      }
+      if (session.role === "analista") {
+        router.push("/command");
+        return;
+      }
+      setFirstName(resolveFirstName(session.name, session.username));
+      setAuthChecked(true);
     });
     return () => {
       active = false;
@@ -78,9 +92,9 @@ export default function ClientAppPage() {
                   className="h-full"
                 >
                   {tab === "onboarding" && (
-                    <Onboarding onFinish={() => setTab("myford")} />
+                    <Onboarding firstName={firstName} onFinish={() => setTab("myford")} />
                   )}
-                  {tab === "myford" && <MyFord />}
+                  {tab === "myford" && <MyFord firstName={firstName} />}
                   {tab === "alerts" && <Alerts />}
                   {tab === "points" && <Points />}
                   {tab === "timeline" && <Timeline />}

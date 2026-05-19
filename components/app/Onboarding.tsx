@@ -6,6 +6,7 @@ import { MessageCircle, Zap, Shield, Bell, Car, ChevronRight, Sparkles, PartyPop
 
 interface Props {
   onFinish: () => void;
+  firstName: string;
 }
 
 const STEPS = [
@@ -31,7 +32,7 @@ const STEPS = [
   },
 ];
 
-export default function Onboarding({ onFinish }: Props) {
+export default function Onboarding({ onFinish, firstName }: Props) {
   const [phase, setPhase] = useState<"idle" | "notification" | "welcome" | "reveal">("idle");
   const [currentStep, setCurrentStep] = useState(-1);
 
@@ -122,7 +123,7 @@ export default function Onboarding({ onFinish }: Props) {
                   <span className="text-[9px] text-white/40">agora</span>
                 </div>
                 <p className="text-[11px] text-white/80 mt-0.5 leading-relaxed">
-                  Olá Rafael! 🎉 Sua Ford Ranger está pronta. Toque para ativar seu Ford Vision e começar o tour digital!
+                  {`Olá ${firstName}! 🎉 Sua Ford Ranger está pronta. Toque para ativar seu Ford Vision e começar o tour digital!`}
                 </p>
               </div>
             </div>
@@ -158,7 +159,7 @@ export default function Onboarding({ onFinish }: Props) {
               transition={{ delay: 0.4 }}
               className="font-display text-2xl font-bold uppercase tracking-[0.08em]"
             >
-              Parabéns, <span className="text-ford-blue-light">Rafael!</span>
+              Parabéns, <span className="text-ford-blue-light">{firstName}!</span>
             </motion.h1>
 
             <motion.p
