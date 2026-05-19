@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import FordLogo from "@/components/shared/FordLogo";
 import { login, prefetchCsrf, register } from "@/lib/auth";
 
 const BOOT_LINES: {
@@ -266,7 +265,15 @@ export default function LoginPage() {
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="relative z-10 flex flex-col items-center"
           >
-            <FordLogo width={250} />
+            <img
+              src="/ford-logo-real.svg"
+              alt="Ford"
+              className="w-[250px] md:w-[280px] h-auto select-none"
+              style={{
+                filter: "drop-shadow(0 0 24px rgba(0, 104, 214, 0.45))",
+              }}
+              draggable={false}
+            />
 
             <motion.h1
               initial={{ opacity: 0, letterSpacing: "0.05em" }}
