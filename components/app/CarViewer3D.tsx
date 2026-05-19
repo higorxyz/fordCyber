@@ -16,11 +16,12 @@ export default function CarViewer3D() {
     let modelPivot: THREE.Group | null = null;
     let rafId = 0;
     let disposed = false;
+    let dynamicLookY = 0.5;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
-    camera.position.set(0, 1.6, 5.2);
-    camera.lookAt(0, 0.4, 0);
+    camera.position.set(0, 1.35, 5.2);
+    camera.lookAt(0, dynamicLookY, 0);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -58,7 +59,7 @@ export default function CarViewer3D() {
         side: THREE.DoubleSide,
       })
     );
-    underGlow.position.set(0, 0.02, 0);
+    underGlow.position.set(0, -0.07, 0);
     underGlow.rotation.x = -Math.PI / 2;
     scene.add(underGlow);
 
@@ -76,8 +77,14 @@ export default function CarViewer3D() {
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const minY = box.min.y;
+        const size = box.getSize(new THREE.Vector3());
 
-        model.position.set(-center.x, -minY + 0.02, -center.z);
+        model.position.set(-center.x, -minY - 0.06, -center.z);
+        dynamicLookY = size.y * 0.34;
+
+        const glowScaleX = Math.max(1.0, size.x * 0.33);
+        const glowScaleZ = Math.max(1.0, size.z * 0.24);
+        underGlow.scale.set(glowScaleX, glowScaleZ, 1);
 
         modelPivot?.add(model);
         if (overlayRef.current) {
@@ -97,7 +104,10 @@ export default function CarViewer3D() {
     const resize = () => {
       const width = mount.clientWidth || 1;
       const height = mount.clientHeight || 1;
+      const isNarrow = width / height < 0.82;
       camera.aspect = width / height;
+      camera.position.set(0, isNarrow ? 1.15 : 1.35, isNarrow ? 6.0 : 5.2);
+      camera.lookAt(0, dynamicLookY, 0);
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
     };

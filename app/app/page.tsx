@@ -41,22 +41,6 @@ export default function ClientAppPage() {
   const [tab, setTab] = useState<Tab>("onboarding");
   const [authChecked, setAuthChecked] = useState(false);
   const [firstName, setFirstName] = useState("Cliente");
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(max-width: 767px)");
-    const syncViewport = () => setIsMobileViewport(media.matches);
-    syncViewport();
-
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", syncViewport);
-      return () => media.removeEventListener("change", syncViewport);
-    }
-
-    media.addListener(syncViewport);
-    return () => media.removeListener(syncViewport);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -81,35 +65,21 @@ export default function ClientAppPage() {
   if (!authChecked) return null;
 
   return (
-    <div className="grain min-h-[100dvh] bg-black flex flex-col relative">
+    <div className="grain h-[100dvh] bg-black flex flex-col relative overflow-hidden">
       <GradientCanvas />
       <div className="fixed inset-0 hud-grid opacity-50 pointer-events-none" />
       <Navbar />
-      <main
-        className={`flex-1 relative z-10 ${
-          isMobileViewport
-            ? "flex items-stretch justify-stretch px-0 py-0"
-            : "flex items-center justify-center px-4 py-8"
-        }`}
-      >
-        <div className={isMobileViewport ? "w-full h-full" : "flex flex-col items-center gap-4"}>
-          <div
-            className={
-              isMobileViewport
-                ? "w-full h-full flex flex-col bg-black"
-                : "phone-frame w-[400px] h-[820px] flex flex-col"
-            }
-          >
-            {!isMobileViewport && (
-              <div className="flex items-center justify-between px-6 pt-3 pb-1 text-[11px] text-white/80">
-                <span className="font-semibold">9:41</span>
-                <div className="flex items-center gap-1">
-                  <Signal className="w-3 h-3" />
-                  <Wifi className="w-3 h-3" />
-                  <BatteryFull className="w-4 h-4" />
-                </div>
+      <main className="flex-1 min-h-0 relative z-10 md:flex md:items-center md:justify-center md:px-4 md:py-8">
+        <div className="w-full h-full md:h-auto md:w-auto md:flex md:flex-col md:items-center md:gap-4">
+          <div className="w-full h-full flex flex-col bg-black md:phone-frame md:w-[400px] md:h-[820px]">
+            <div className="hidden md:flex items-center justify-between px-6 pt-3 pb-1 text-[11px] text-white/80">
+              <span className="font-semibold">9:41</span>
+              <div className="flex items-center gap-1">
+                <Signal className="w-3 h-3" />
+                <Wifi className="w-3 h-3" />
+                <BatteryFull className="w-4 h-4" />
               </div>
-            )}
+            </div>
 
             <div className="flex-1 overflow-y-auto min-h-0">
               <AnimatePresence mode="wait">
@@ -134,11 +104,7 @@ export default function ClientAppPage() {
             </div>
 
             {tab !== "onboarding" && (
-              <div
-                className={`border-t border-ford-gray-mid bg-black/95 backdrop-blur shrink-0 ${
-                  isMobileViewport ? "safe-pad-bottom" : ""
-                }`}
-              >
+              <div className="border-t border-ford-gray-mid bg-black/95 backdrop-blur shrink-0 safe-pad-bottom md:pb-0">
                 <div className="grid grid-cols-5 px-2 py-2">
                   {TABS.map((t) => {
                     const Icon = t.icon;
@@ -147,21 +113,12 @@ export default function ClientAppPage() {
                       <button
                         key={t.id}
                         onClick={() => setTab(t.id)}
-                        className={`flex flex-col items-center gap-0.5 transition-colors ${
-                          isMobileViewport ? "py-2" : "py-1"
-                        } ${
+                        className={`flex flex-col items-center gap-0.5 py-2 md:py-1 transition-colors ${
                           active ? "text-ford-blue-light" : "text-white/40"
                         }`}
                       >
-                        <Icon
-                          className={isMobileViewport ? "w-5 h-5" : "w-4 h-4"}
-                          strokeWidth={active ? 2.5 : 2}
-                        />
-                        <span
-                          className={`font-semibold tracking-wider uppercase ${
-                            isMobileViewport ? "text-[9px]" : "text-[8px]"
-                          }`}
-                        >
+                        <Icon className="w-5 h-5 md:w-4 md:h-4" strokeWidth={active ? 2.5 : 2} />
+                        <span className="font-semibold tracking-wider uppercase text-[9px] md:text-[8px]">
                           {t.label}
                         </span>
                       </button>
@@ -172,10 +129,10 @@ export default function ClientAppPage() {
             )}
           </div>
 
-          {tab === "onboarding" && !isMobileViewport && (
+          {tab === "onboarding" && (
             <button
               onClick={() => setTab("myford")}
-              className="cta-rimac text-[9px]"
+              className="hidden md:inline-flex cta-rimac text-[9px]"
             >
               Pular onboarding
             </button>
