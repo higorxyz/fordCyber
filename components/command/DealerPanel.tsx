@@ -32,11 +32,11 @@ const STATUS_LABEL = {
 export default function DealerPanel({ dealer, onClose }: Props) {
   return (
     <motion.aside
-      initial={{ x: 420, opacity: 0 }}
+      initial={{ x: "100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 420, opacity: 0 }}
+      exit={{ x: "100%", opacity: 0 }}
       transition={{ type: "spring", damping: 25, stiffness: 220 }}
-      className="absolute top-0 right-0 h-full w-[400px] xl:w-[420px] bg-[#0a0a0a] border-l border-ford-blue z-[1000] overflow-y-auto"
+      className="absolute top-0 right-0 h-full w-full sm:w-[400px] xl:w-[420px] bg-[#0a0a0a] border-l border-ford-blue z-[1000] overflow-y-auto"
     >
       <div className="sticky top-0 bg-black/95 backdrop-blur border-b border-ford-blue/50 p-4 flex items-start justify-between z-10">
         <div>

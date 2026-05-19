@@ -12,6 +12,9 @@
 
 html,
 body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
   background: #000000;
   color: #ffffff;
   font-family: "Archivo", system-ui, sans-serif;
@@ -22,6 +25,14 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+.safe-pad-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+.safe-pad-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 /* === HUD GRID BACKDROP === */

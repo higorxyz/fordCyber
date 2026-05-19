@@ -13,6 +13,7 @@ export default function CarViewer3D() {
     if (!mount) return;
 
     let model: THREE.Object3D | null = null;
+    let modelPivot: THREE.Group | null = null;
     let rafId = 0;
     let disposed = false;
 
@@ -61,21 +62,24 @@ export default function CarViewer3D() {
     underGlow.rotation.x = -Math.PI / 2;
     scene.add(underGlow);
 
+    modelPivot = new THREE.Group();
+    scene.add(modelPivot);
+
     const loader = new GLTFLoader();
     loader.load(
       "/models/ford_ranger_raptor.glb",
       (gltf) => {
         if (disposed) return;
         model = gltf.scene;
+        model.scale.setScalar(0.43);
 
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
-        model.position.y += size.y * 0.1;
-        model.scale.setScalar(0.43);
+        const minY = box.min.y;
 
-        scene.add(model);
+        model.position.set(-center.x, -minY + 0.02, -center.z);
+
+        modelPivot?.add(model);
         if (overlayRef.current) {
           overlayRef.current.style.opacity = "0";
         }
@@ -104,8 +108,8 @@ export default function CarViewer3D() {
 
     const animate = () => {
       rafId = window.requestAnimationFrame(animate);
-      if (model) {
-        model.rotation.y += 0.004;
+      if (modelPivot) {
+        modelPivot.rotation.y += 0.004;
       }
       renderer.render(scene, camera);
     };

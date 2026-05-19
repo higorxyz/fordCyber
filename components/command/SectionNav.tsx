@@ -18,50 +18,74 @@ export default function SectionNav({ sections, active, onSelect }: Props) {
   const activeIdx = sections.findIndex((s) => s.id === active);
 
   return (
-    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex items-stretch gap-3 pl-5">
-      <div className="relative w-[2px] bg-white/10 self-stretch" style={{ minHeight: sections.length * 56 }}>
-        <motion.div
-          className="absolute left-0 w-full bg-ford-blue-light"
-          initial={false}
-          animate={{
-            top: `${(activeIdx / sections.length) * 100}%`,
-            height: `${(1 / sections.length) * 100}%`,
-          }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        />
+    <>
+      <div className="hidden md:flex fixed left-0 top-1/2 -translate-y-1/2 z-30 items-stretch gap-3 pl-5">
+        <div className="relative w-[2px] bg-white/10 self-stretch" style={{ minHeight: sections.length * 56 }}>
+          <motion.div
+            className="absolute left-0 w-full bg-ford-blue-light"
+            initial={false}
+            animate={{
+              top: `${(activeIdx / sections.length) * 100}%`,
+              height: `${(1 / sections.length) * 100}%`,
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          />
+        </div>
+
+        <div className="flex flex-col justify-between" style={{ minHeight: sections.length * 56 }}>
+          {sections.map((s) => {
+            const isActive = s.id === active;
+            return (
+              <button
+                key={s.id}
+                onClick={() => onSelect(s.id)}
+                className={`group flex items-center gap-3 py-2 text-left transition-all duration-300 ${
+                  isActive ? "opacity-100" : "opacity-30 hover:opacity-60"
+                }`}
+              >
+                <span
+                  className={`font-mono-tech text-[10px] tabular-nums transition-colors duration-300 ${
+                    isActive ? "text-ford-blue-light" : "text-white/50"
+                  }`}
+                >
+                  {s.code}
+                </span>
+                <span
+                  className={`font-display text-[11px] uppercase transition-all duration-300 ${
+                    isActive
+                      ? "tracking-[0.5em] text-white"
+                      : "tracking-[0.3em] text-white/60"
+                  }`}
+                >
+                  {s.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex flex-col justify-between" style={{ minHeight: sections.length * 56 }}>
-        {sections.map((s) => {
-          const isActive = s.id === active;
-          return (
-            <button
-              key={s.id}
-              onClick={() => onSelect(s.id)}
-              className={`group flex items-center gap-3 py-2 text-left transition-all duration-300 ${
-                isActive ? "opacity-100" : "opacity-30 hover:opacity-60"
-              }`}
-            >
-              <span
-                className={`font-mono-tech text-[10px] tabular-nums transition-colors duration-300 ${
-                  isActive ? "text-ford-blue-light" : "text-white/50"
-                }`}
-              >
-                {s.code}
-              </span>
-              <span
-                className={`font-display text-[11px] uppercase transition-all duration-300 ${
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-ford-blue/40 bg-black/95 backdrop-blur safe-pad-bottom">
+        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+          {sections.map((s) => {
+            const isActive = s.id === active;
+            return (
+              <button
+                key={s.id}
+                onClick={() => onSelect(s.id)}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-sm border px-1 py-2 transition-colors ${
                   isActive
-                    ? "tracking-[0.5em] text-white"
-                    : "tracking-[0.3em] text-white/60"
+                    ? "border-ford-blue-light bg-ford-blue-light/10 text-ford-blue-light"
+                    : "border-white/15 text-white/60"
                 }`}
               >
-                {s.label}
-              </span>
-            </button>
-          );
-        })}
+                <span className="font-mono-tech text-[9px] tabular-nums">{s.code}</span>
+                <span className="font-display text-[9px] uppercase tracking-[0.15em]">{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

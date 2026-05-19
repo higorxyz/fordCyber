@@ -19,6 +19,7 @@ import { getRole } from "@/lib/auth";
 export default function MotorPage() {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -33,13 +34,28 @@ export default function MotorPage() {
     };
   }, [router]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => setIsMobileViewport(media.matches);
+    syncViewport();
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", syncViewport);
+      return () => media.removeEventListener("change", syncViewport);
+    }
+
+    media.addListener(syncViewport);
+    return () => media.removeListener(syncViewport);
+  }, []);
+
   if (!authChecked) return null;
 
   return (
     <div className="grain min-h-screen bg-black flex flex-col relative">
       <div className="fixed inset-0 hud-grid opacity-50 pointer-events-none" />
       <Navbar />
-      <main className="flex-1 max-w-[1400px] mx-auto px-6 py-10 w-full relative">
+      <main className="flex-1 max-w-[1400px] mx-auto px-4 sm:px-6 py-8 md:py-10 w-full relative">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -48,7 +64,7 @@ export default function MotorPage() {
           <div className="font-mono-tech text-[10px] uppercase tracking-[0.4em] text-ford-blue-light">
             ARQUITETURA · 03
           </div>
-          <h1 className="font-display text-5xl md:text-6xl font-bold tracking-[0.04em] mt-3 uppercase">
+          <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold tracking-[0.04em] mt-3 uppercase">
             Motor de IA <br />
             <span className="text-ford-blue-light">Ford Vision</span>
           </h1>
@@ -58,103 +74,143 @@ export default function MotorPage() {
           </p>
         </motion.div>
 
-        <div className="relative mx-auto" style={{ maxWidth: 900 }}>
-          <svg
-            viewBox="0 0 900 600"
-            className="w-full h-auto"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <linearGradient id="redLine" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0068D6" />
-                <stop offset="100%" stopColor="#003478" />
-              </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="b" />
-                <feMerge>
-                  <feMergeNode in="b" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <line
-              x1="450"
-              y1="105"
-              x2="450"
-              y2="200"
-              stroke="url(#redLine)"
-              strokeWidth="2"
-              className="flow-line"
+        {isMobileViewport ? (
+          <div className="max-w-xl mx-auto space-y-3">
+            <MobileStep
+              icon={<Car className="w-5 h-5" />}
+              title="Veículo Conectado"
+              subtitle="SYNC · FordPass · Telemetria"
+              tags={["Km", "Óleo", "Freios", "Bateria", "Diagnóstico"]}
             />
-            <line
-              x1="450"
-              y1="395"
-              x2="250"
-              y2="490"
-              stroke="url(#redLine)"
-              strokeWidth="2"
-              className="flow-line"
+            <div className="text-center font-mono-tech text-[10px] text-ford-blue-light/80 uppercase tracking-[0.25em]">
+              ↓ processamento IA
+            </div>
+            <MobileStep
+              icon={<Brain className="w-5 h-5" />}
+              title="Ford Vision AI"
+              subtitle="Modelo de ML · Segmentação + Predição"
+              tags={[
+                "Classifica cliente",
+                "Prevê serviço",
+                "Calcula urgência",
+                "Cruza estoque",
+              ]}
+              highlight
             />
-            <line
-              x1="450"
-              y1="395"
-              x2="650"
-              y2="490"
-              stroke="url(#redLine)"
-              strokeWidth="2"
-              className="flow-line"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <MobileStep
+                icon={<Smartphone className="w-5 h-5" />}
+                title="App Cliente"
+                subtitle="Push · WhatsApp"
+                tags={["Alertas", "Pontos", "Histórico"]}
+              />
+              <MobileStep
+                icon={<LayoutDashboard className="w-5 h-5" />}
+                title="Command Center"
+                subtitle="Equipe Ford · Concessionárias"
+                tags={["Mapa", "Leads", "Estoque"]}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative mx-auto" style={{ maxWidth: 900 }}>
+            <svg
+              viewBox="0 0 900 600"
+              className="w-full h-auto"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="redLine" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0068D6" />
+                  <stop offset="100%" stopColor="#003478" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <line
+                x1="450"
+                y1="105"
+                x2="450"
+                y2="200"
+                stroke="url(#redLine)"
+                strokeWidth="2"
+                className="flow-line"
+              />
+              <line
+                x1="450"
+                y1="395"
+                x2="250"
+                y2="490"
+                stroke="url(#redLine)"
+                strokeWidth="2"
+                className="flow-line"
+              />
+              <line
+                x1="450"
+                y1="395"
+                x2="650"
+                y2="490"
+                stroke="url(#redLine)"
+                strokeWidth="2"
+                className="flow-line"
+              />
+            </svg>
+
+            <Node
+              top="0%"
+              left="50%"
+              icon={<Car className="w-6 h-6" />}
+              title="Veículo Conectado"
+              subtitle="SYNC · FordPass · Telemetria"
+              tags={["Km", "Óleo", "Freios", "Bateria", "Diagnóstico"]}
             />
-          </svg>
 
-          <Node
-            top="0%"
-            left="50%"
-            icon={<Car className="w-6 h-6" />}
-            title="Veículo Conectado"
-            subtitle="SYNC · FordPass · Telemetria"
-            tags={["Km", "Óleo", "Freios", "Bateria", "Diagnóstico"]}
-          />
+            <Node
+              top="33%"
+              left="50%"
+              icon={<Brain className="w-6 h-6" />}
+              title="Ford Vision AI"
+              subtitle="Modelo de ML · Segmentação + Predição"
+              tags={[
+                "Classifica cliente",
+                "Prevê serviço",
+                "Calcula urgência",
+                "Cruza estoque",
+              ]}
+              highlight
+            />
 
-          <Node
-            top="33%"
-            left="50%"
-            icon={<Brain className="w-6 h-6" />}
-            title="Ford Vision AI"
-            subtitle="Modelo de ML · Segmentação + Predição"
-            tags={[
-              "Classifica cliente",
-              "Prevê serviço",
-              "Calcula urgência",
-              "Cruza estoque",
-            ]}
-            highlight
-          />
+            <Node
+              top="80%"
+              left="22%"
+              icon={<Smartphone className="w-6 h-6" />}
+              title="App Cliente"
+              subtitle="Push · WhatsApp"
+              tags={["Alertas", "Pontos", "Histórico"]}
+            />
 
-          <Node
-            top="80%"
-            left="22%"
-            icon={<Smartphone className="w-6 h-6" />}
-            title="App Cliente"
-            subtitle="Push · WhatsApp"
-            tags={["Alertas", "Pontos", "Histórico"]}
-          />
-
-          <Node
-            top="80%"
-            left="78%"
-            icon={<LayoutDashboard className="w-6 h-6" />}
-            title="Command Center"
-            subtitle="Equipe Ford · Concessionárias"
-            tags={["Mapa", "Leads", "Estoque"]}
-          />
-        </div>
+            <Node
+              top="80%"
+              left="78%"
+              icon={<LayoutDashboard className="w-6 h-6" />}
+              title="Command Center"
+              subtitle="Equipe Ford · Concessionárias"
+              tags={["Mapa", "Leads", "Estoque"]}
+            />
+          </div>
+        )}
 
         <div className="mt-16">
           <div className="text-[10px] uppercase tracking-[0.3em] text-white/50 text-center mb-6">
             O que o modelo classifica
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
             {[
               { label: "Fiel", desc: "Volta sempre na concessionária", color: "border-green-500/50" },
               { label: "Econômico", desc: "Busca menor preço", color: "border-blue-500/50" },
@@ -177,7 +233,7 @@ export default function MotorPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
           <Capability icon={<Cpu />} title="Telemetria em tempo real" />
           <Capability icon={<Target />} title="Predição de serviço" />
           <Capability icon={<Clock />} title="Janela ideal de contato" />
@@ -198,6 +254,58 @@ export default function MotorPage() {
           </p>
         </motion.blockquote>
       </main>
+    </div>
+  );
+}
+
+function MobileStep({
+  icon,
+  title,
+  subtitle,
+  tags,
+  highlight,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  tags: string[];
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`ford-card p-4 ${highlight ? "border-ford-blue-light" : ""}`}
+      style={highlight ? { boxShadow: "0 0 24px rgba(0,104,214,0.25)" } : undefined}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+            highlight
+              ? "bg-ford-blue-light text-white"
+              : "bg-ford-blue/30 border border-ford-blue text-ford-blue-light"
+          }`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-bold leading-tight">{title}</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] text-white/55 mt-1">{subtitle}</div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {tags.map((t) => (
+          <span
+            key={t}
+            className={`text-[9px] px-2 py-0.5 rounded ${
+              highlight
+                ? "bg-ford-blue/40 border border-ford-blue-light/50 text-white"
+                : "bg-black/60 border border-ford-gray-mid text-white/60"
+            }`}
+          >
+            {t}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

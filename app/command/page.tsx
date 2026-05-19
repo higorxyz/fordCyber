@@ -107,7 +107,7 @@ export default function CommandPage() {
   if (!authChecked) return null;
 
   return (
-    <div className="grain min-h-screen bg-black flex flex-col relative">
+    <div className="grain min-h-[100dvh] bg-black flex flex-col relative">
       <GradientCanvas />
       <div className="fixed inset-0 hud-grid opacity-50 pointer-events-none" />
       <Navbar />
@@ -119,16 +119,16 @@ export default function CommandPage() {
       />
 
       <div className="border-b border-ford-blue/40 bg-[#0a0a0a]/80 backdrop-blur-sm relative z-10">
-        <div className="max-w-[1600px] mx-auto px-6 pl-48 flex items-center justify-between h-12">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 md:pl-48 flex min-h-12 flex-col gap-2 py-2 md:h-12 md:min-h-0 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center gap-4">
             <span className="font-mono-tech text-[10px] text-ford-blue-light tabular-nums">
               {SECTIONS.find((s) => s.id === section)?.code}
             </span>
-            <span className="font-display text-[12px] uppercase tracking-[0.5em] text-white">
+            <span className="font-display text-[11px] md:text-[12px] uppercase tracking-[0.25em] md:tracking-[0.5em] text-white">
               {SECTIONS.find((s) => s.id === section)?.fullLabel}
             </span>
           </div>
-          <div className="font-mono-tech flex items-center gap-3 text-[10px] text-white/50 uppercase tracking-wider">
+          <div className="font-mono-tech flex flex-wrap items-center gap-2 md:gap-3 text-[9px] md:text-[10px] text-white/50 uppercase tracking-wider">
             <span className={`flex items-center gap-1.5 ${syncing ? "text-ford-blue-light" : "text-green-400"} transition-colors duration-300`}>
               <span className="w-2 h-2 rounded-full bg-green-400 live-dot" />
               LIVE
@@ -143,7 +143,7 @@ export default function CommandPage() {
         </div>
       </div>
 
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 pb-24 md:pb-0">
         <AnimatePresence mode="wait">
           {section === "map" && (
             <motion.div
@@ -152,12 +152,12 @@ export default function CommandPage() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="relative h-[calc(100vh-104px)]"
+              className="relative h-[calc(100dvh-190px)] min-h-[380px] md:h-[calc(100dvh-104px)] md:min-h-0"
             >
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center bg-black/90 border border-ford-blue/50 rounded-sm overflow-hidden">
+              <div className="absolute top-3 md:top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center bg-black/90 border border-ford-blue/50 rounded-sm overflow-hidden">
                 <button
                   onClick={() => setMapMode("3d")}
-                  className={`flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-[0.2em] font-mono-tech transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 text-[9px] md:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] font-mono-tech transition-all ${
                     mapMode === "3d"
                       ? "bg-ford-blue-light/20 text-ford-blue-light border-r border-ford-blue/50"
                       : "text-white/40 hover:text-white border-r border-ford-blue/50"
@@ -168,7 +168,7 @@ export default function CommandPage() {
                 </button>
                 <button
                   onClick={() => setMapMode("2d")}
-                  className={`flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-[0.2em] font-mono-tech transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 text-[9px] md:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] font-mono-tech transition-all ${
                     mapMode === "2d"
                       ? "bg-ford-blue-light/20 text-ford-blue-light"
                       : "text-white/40 hover:text-white"
@@ -184,7 +184,7 @@ export default function CommandPage() {
               ) : (
                 <>
                   <VisionMap selected={selected} onSelect={setSelected} />
-                  <div className="absolute top-14 left-4 bg-black/90 border border-ford-blue/60 p-3 z-[1000] font-mono-tech text-[10px] uppercase tracking-wider space-y-1.5 bracket">
+                  <div className="absolute top-12 md:top-14 left-2 md:left-4 bg-black/90 border border-ford-blue/60 p-2 md:p-3 z-[1000] font-mono-tech text-[9px] md:text-[10px] uppercase tracking-wider space-y-1.5 bracket">
                     <div className="text-ford-blue-light mb-2">SERVICE SHARE</div>
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
@@ -220,7 +220,7 @@ export default function CommandPage() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="max-w-[1600px] mx-auto px-6 pl-48 py-6"
+              className="max-w-[1600px] mx-auto px-3 sm:px-6 md:pl-48 py-4 md:py-6"
             >
               <LeadsRadar />
             </motion.div>
@@ -233,7 +233,7 @@ export default function CommandPage() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="max-w-[1600px] mx-auto px-6 pl-48 py-6"
+              className="max-w-[1600px] mx-auto px-3 sm:px-6 md:pl-48 py-4 md:py-6"
             >
               <StockControl />
             </motion.div>
@@ -246,7 +246,7 @@ export default function CommandPage() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="max-w-[1600px] mx-auto px-6 pl-48 py-6"
+              className="max-w-[1600px] mx-auto px-3 sm:px-6 md:pl-48 py-4 md:py-6"
             >
               <Performance />
             </motion.div>

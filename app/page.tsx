@@ -181,19 +181,6 @@ export default function LoginPage() {
 
   return (
     <main className="scanline grain relative min-h-screen w-full overflow-hidden bg-black flex flex-col items-center justify-center px-4">
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-25"
-        poster=""
-      >
-        <source
-          src="https://cdn.pixabay.com/video/2020/07/30/45469-445072030_large.mp4"
-          type="video/mp4"
-        />
-      </video>
       <div className="absolute inset-0 bg-black/70" />
 
       <AnimatePresence mode="wait">
@@ -209,18 +196,18 @@ export default function LoginPage() {
           <div className="absolute inset-0 hud-grid opacity-70" />
           <div className="absolute inset-0 hud-grid-fine opacity-40" />
 
-          <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ford-blue-light/20 to-transparent" />
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-ford-blue-light/20 to-transparent" />
+          <div className="hidden sm:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ford-blue-light/20 to-transparent" />
+          <div className="hidden sm:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-ford-blue-light/20 to-transparent" />
 
-          <div className="absolute top-6 left-6 w-8 h-8 border-l-2 border-t-2 border-ford-blue-light/70" />
-          <div className="absolute top-6 right-6 w-8 h-8 border-r-2 border-t-2 border-ford-blue-light/70" />
-          <div className="absolute bottom-6 left-6 w-8 h-8 border-l-2 border-b-2 border-ford-blue-light/70" />
-          <div className="absolute bottom-6 right-6 w-8 h-8 border-r-2 border-b-2 border-ford-blue-light/70" />
+          <div className="hidden sm:block absolute top-6 left-6 w-8 h-8 border-l-2 border-t-2 border-ford-blue-light/70" />
+          <div className="hidden sm:block absolute top-6 right-6 w-8 h-8 border-r-2 border-t-2 border-ford-blue-light/70" />
+          <div className="hidden sm:block absolute bottom-6 left-6 w-8 h-8 border-l-2 border-b-2 border-ford-blue-light/70" />
+          <div className="hidden sm:block absolute bottom-6 right-6 w-8 h-8 border-r-2 border-b-2 border-ford-blue-light/70" />
 
-          <div className="absolute top-8 left-1/2 -translate-x-1/2 label-tech text-center">
+          <div className="hidden md:block absolute top-8 left-1/2 -translate-x-1/2 label-tech text-center">
             SECURE TERMINAL · v2.6 · NODE 0xVISION
           </div>
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 label-tech text-center">
+          <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 label-tech text-center">
             FORD MOTOR COMPANY · AUTHORIZED ACCESS ONLY
           </div>
 
@@ -274,7 +261,7 @@ export default function LoginPage() {
             <img
               src="/ford-logo-real.svg"
               alt="Ford"
-              className="w-[250px] md:w-[280px] h-auto select-none"
+              className="w-[210px] sm:w-[250px] md:w-[280px] h-auto select-none"
               style={{
                 filter: "drop-shadow(0 0 24px rgba(0, 104, 214, 0.45))",
               }}
@@ -283,16 +270,16 @@ export default function LoginPage() {
 
             <motion.h1
               initial={{ opacity: 0, letterSpacing: "0.05em" }}
-              animate={{ opacity: 1, letterSpacing: "0.25em" }}
+              animate={{ opacity: 1, letterSpacing: "0.16em" }}
               transition={{ delay: 1.2, duration: 1 }}
-              className="vision-text mt-4 text-[80px] md:text-[100px] leading-none"
+              className="vision-text mt-4 text-[56px] sm:text-[80px] md:text-[100px] leading-none"
             >
               VISION
             </motion.h1>
 
             <svg
               viewBox="0 0 600 80"
-              className="w-[420px] md:w-[520px] h-16 mt-2"
+              className="w-[min(92vw,420px)] md:w-[520px] h-16 mt-2"
             >
               <path
                 className="ecg-path"
@@ -300,7 +287,7 @@ export default function LoginPage() {
               />
             </svg>
 
-            <p className="font-display mt-4 text-[10px] tracking-[0.5em] text-ford-red/90 uppercase">
+            <p className="font-display mt-4 px-4 text-[9px] sm:text-[10px] tracking-[0.22em] sm:tracking-[0.5em] text-ford-red/90 uppercase text-center">
               Retenção Inteligente · Do Veículo ao Serviço
             </p>
           </motion.div>

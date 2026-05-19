@@ -169,8 +169,8 @@ export default function AdminPage() {
       <div className="fixed inset-0 hud-grid opacity-50 pointer-events-none" />
       <Navbar />
 
-      <main className="flex-1 max-w-[1400px] mx-auto px-6 py-8 w-full relative z-10">
-        <div className="flex items-center justify-between mb-6">
+      <main className="flex-1 max-w-[1400px] mx-auto px-4 sm:px-6 py-6 md:py-8 w-full relative z-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <div className="font-mono-tech text-[10px] uppercase tracking-[0.4em] text-ford-blue-light">
               ADMIN · 04
@@ -184,7 +184,7 @@ export default function AdminPage() {
           </div>
           <Link
             href="/admin/audit"
-            className="font-display px-4 py-2 text-[10px] uppercase tracking-[0.3em] border border-ford-blue-light text-ford-blue-light hover:bg-ford-blue-light/10"
+            className="font-display w-full sm:w-auto text-center px-4 py-2 text-[10px] uppercase tracking-[0.3em] border border-ford-blue-light text-ford-blue-light hover:bg-ford-blue-light/10"
           >
             Ver auditoria
           </Link>

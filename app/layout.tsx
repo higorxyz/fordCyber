@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 
@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: "FORD VISION — Retenção Inteligente",
   description:
     "Do veículo ao serviço. Plataforma preditiva de retenção Ford.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
