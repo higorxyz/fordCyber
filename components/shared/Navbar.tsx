@@ -6,11 +6,27 @@ import { useEffect, useState } from "react";
 import { Activity, LogOut } from "lucide-react";
 import { getRole, logout, Role } from "@/lib/auth";
 
+type NavLink = {
+  href: string;
+  label: string;
+  code: string;
+  roles: Role[];
+};
+
+const ALL_LINKS: NavLink[] = [
+  { href: "/app", label: "App Cliente", code: "01", roles: ["usuario", "admin"] },
+  { href: "/command", label: "Command", code: "02", roles: ["analista", "admin"] },
+  { href: "/motor", label: "Motor IA", code: "03", roles: ["analista", "admin"] },
+  { href: "/admin", label: "Admin", code: "04", roles: ["admin"] },
+  { href: "/sessions", label: "Sessões", code: "05", roles: ["usuario", "analista", "admin"] },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [now, setNow] = useState<string>("");
   const [role, setRole] = useState<Role | null>(null);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -28,21 +44,23 @@ export default function Navbar() {
 
   useEffect(() => {
     let active = true;
-    getRole().then((value) => {
-      if (active) setRole(value);
-    });
+    getRole()
+      .then((value) => {
+        if (active) setRole(value);
+      })
+      .finally(() => {
+        if (active) setRoleLoaded(true);
+      });
     return () => {
       active = false;
     };
   }, []);
 
-  const links = [
-    { href: "/app", label: "App Cliente", code: "01" },
-    { href: "/command", label: "Command", code: "02" },
-    { href: "/motor", label: "Motor IA", code: "03" },
-    { href: "/sessions", label: "Sessões", code: "05" },
-  ];
-  const navLinks = role === "admin" ? [...links, { href: "/admin", label: "Admin", code: "04" }] : links;
+  const navLinks =
+    roleLoaded && role
+      ? ALL_LINKS.filter((link) => link.roles.includes(role))
+      : [];
+  const homeHref = role === "analista" ? "/command" : "/app";
 
   async function handleLogout() {
     await logout();
@@ -53,7 +71,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-40 bg-ford-blue/95 backdrop-blur border-b border-ford-blue-light/40">
       <div className="max-w-[1600px] mx-auto px-3 sm:px-6">
         <div className="hidden md:flex h-14 items-center justify-between">
-          <Link href="/app" className="flex items-center gap-3 group">
+          <Link href={homeHref} className="flex items-center gap-3 group">
             <div className="relative">
               <Activity
                 className="w-5 h-5 text-ford-blue-light group-hover:scale-110 transition-transform"
@@ -71,7 +89,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-1">
             {navLinks.map((l) => {
-              const active = pathname === l.href;
+              const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
               return (
                 <Link
                   key={l.href}
@@ -109,7 +127,7 @@ export default function Navbar() {
         </div>
 
         <div className="md:hidden flex h-14 items-center justify-between">
-          <Link href="/app" className="flex items-center gap-2 group min-w-0">
+          <Link href={homeHref} className="flex items-center gap-2 group min-w-0">
             <div className="relative">
               <Activity
                 className="w-4 h-4 text-ford-blue-light group-hover:scale-110 transition-transform"
@@ -139,7 +157,7 @@ export default function Navbar() {
         <div className="md:hidden -mx-3 px-3 pb-2 overflow-x-auto">
           <div className="flex min-w-max items-center gap-1">
             {navLinks.map((l) => {
-              const active = pathname === l.href;
+              const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
               return (
                 <Link
                   key={l.href}
