@@ -66,6 +66,40 @@ export type PasswordResetActionResult =
   | ActionError;
 
 let csrfTokenCache: string | null = null;
+const SESSION_CACHE_TTL_MS = 10_000;
+
+let sessionCache:
+  | {
+      value: SessionResponse | null;
+      expiresAt: number;
+    }
+  | null = null;
+let sessionRequestInFlight: Promise<SessionResponse | null> | null = null;
+
+function setSessionCache(value: SessionResponse | null) {
+  sessionCache = {
+    value,
+    expiresAt: Date.now() + SESSION_CACHE_TTL_MS,
+  };
+}
+
+function readSessionCache() {
+  if (!sessionCache) return undefined;
+  if (sessionCache.expiresAt <= Date.now()) {
+    sessionCache = null;
+    return undefined;
+  }
+  return sessionCache.value;
+}
+
+function clearSessionCache() {
+  sessionCache = null;
+  sessionRequestInFlight = null;
+}
+
+export function invalidateSessionCache() {
+  clearSessionCache();
+}
 
 function readCsrfFromCookie() {
   if (typeof document === "undefined") return null;
@@ -145,6 +179,7 @@ export async function login(
       message: "Resposta invalida do servidor",
     };
   }
+  setSessionCache(data);
   return {
     ok: true,
     role: data.role,
@@ -182,13 +217,14 @@ export async function register(
       message: "Resposta invalida do servidor",
     };
   }
+  setSessionCache(data);
   return {
     ok: true,
     role: data.role,
   };
 }
 
-async function fetchSessionProfile(): Promise<SessionResponse | null> {
+async function requestSessionProfile(): Promise<SessionResponse | null> {
   const res = await fetch("/api/auth/session", { cache: "no-store" });
   if (res.ok) {
     return (await res.json()) as SessionResponse;
@@ -210,6 +246,26 @@ async function fetchSessionProfile(): Promise<SessionResponse | null> {
   return null;
 }
 
+async function fetchSessionProfile(): Promise<SessionResponse | null> {
+  const cached = readSessionCache();
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  if (!sessionRequestInFlight) {
+    sessionRequestInFlight = requestSessionProfile()
+      .then((session) => {
+        setSessionCache(session);
+        return session;
+      })
+      .finally(() => {
+        sessionRequestInFlight = null;
+      });
+  }
+
+  return sessionRequestInFlight;
+}
+
 export async function getSessionProfile(): Promise<SessionProfile | null> {
   return fetchSessionProfile();
 }
@@ -221,6 +277,7 @@ export async function getRole(): Promise<Role | null> {
 
 export async function logout() {
   const csrfToken = await ensureCsrfToken();
+  clearSessionCache();
   if (!csrfToken) return;
   await fetch("/api/auth/logout", {
     method: "POST",
@@ -230,6 +287,7 @@ export async function logout() {
 
 export async function logoutAll() {
   const csrfToken = await ensureCsrfToken();
+  clearSessionCache();
   if (!csrfToken) return false;
   const res = await fetch("/api/auth/logout-all", {
     method: "POST",
@@ -317,5 +375,8 @@ export async function revokeSession(sessionId: string) {
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });
+  if (res.ok) {
+    clearSessionCache();
+  }
   return res.ok;
 }

@@ -151,6 +151,11 @@ export default function LoginPage() {
     prefetchCsrf();
   }, []);
 
+  useEffect(() => {
+    router.prefetch("/app");
+    router.prefetch("/command");
+  }, [router]);
+
   const handleBootComplete = useCallback(() => {
     setBooting(false);
   }, []);
