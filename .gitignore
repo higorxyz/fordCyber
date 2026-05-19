@@ -1,0 +1,32 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# env
+.env
+.env.local
+.env*.local
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# encrypted data
+data/secure/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editor / tooling
+.vscode/
+.idea/
+.claude/
+
+# next
+next-env.d.ts
+.vercel

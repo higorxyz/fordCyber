@@ -1,0 +1,519 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800;900&family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap");
+
+:root {
+  color-scheme: dark;
+  --grid-line: rgba(0, 104, 214, 0.06);
+  --grid-bg: #050505;
+}
+
+html,
+body {
+  background: #000000;
+  color: #ffffff;
+  font-family: "Archivo", system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.005em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* === HUD GRID BACKDROP === */
+.hud-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+.hud-grid-fine {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* === NOISE / GRAIN === */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  z-index: 1;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #2d2d2d;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0068d6;
+}
+
+/* === VISION LOGIN === */
+.vision-text {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: #ffffff;
+  animation: pulseFord 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseFord {
+  0%,
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 20px rgba(196, 30, 58, 0.6),
+      0 0 40px rgba(196, 30, 58, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    text-shadow: 0 0 40px rgba(196, 30, 58, 1),
+      0 0 80px rgba(196, 30, 58, 0.6), 0 0 120px rgba(196, 30, 58, 0.4);
+  }
+}
+
+/* === ECG === */
+.ecg-path {
+  stroke: #c41e3a;
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  animation: ecgDraw 3s ease-out forwards, ecgPulse 2s ease-in-out 3s infinite;
+  filter: drop-shadow(0 0 8px rgba(196, 30, 58, 0.8));
+}
+
+@keyframes ecgDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ecgPulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(196, 30, 58, 0.8));
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 16px rgba(196, 30, 58, 1));
+  }
+}
+
+/* === RADAR SCAN === */
+.radar-ring {
+  position: absolute;
+  border: 1px solid rgba(196, 30, 58, 0.25);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.radar-ring.scan {
+  animation: radarScan 4s linear infinite;
+}
+@keyframes radarScan {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.8;
+    border-color: rgba(196, 30, 58, 0.55);
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+    border-color: rgba(196, 30, 58, 0);
+  }
+}
+
+/* Vignette */
+.vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 25%,
+    rgba(0, 0, 0, 0.45) 65%,
+    rgba(0, 52, 120, 0.35) 100%
+  );
+  pointer-events: none;
+}
+
+/* Particles */
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #c41e3a;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(196, 30, 58, 0.8);
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  from {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Shake */
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* Map dot */
+.map-dot-pulse {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 12px transparent;
+    opacity: 0.7;
+  }
+}
+
+/* Phone frame */
+.phone-frame {
+  border: 12px solid #1a1a1a;
+  border-radius: 44px;
+  box-shadow: 0 0 0 2px #2d2d2d, 0 30px 80px rgba(0, 52, 120, 0.28),
+    0 0 60px rgba(0, 0, 0, 0.8);
+  background: #000;
+  overflow: hidden;
+  position: relative;
+}
+.phone-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 12%,
+    transparent 88%,
+    rgba(0, 104, 214, 0.05) 100%
+  );
+}
+
+/* === FORD CARD with HUD bracket corners === */
+.ford-card {
+  background: linear-gradient(180deg, #131313 0%, #0d0d0d 100%);
+  border: 1px solid #232323;
+  border-radius: 2px;
+  position: relative;
+  transition: all 0.25s ease;
+}
+.ford-card:hover {
+  border-color: rgba(0, 104, 214, 0.55);
+  box-shadow: 0 0 24px rgba(0, 104, 214, 0.14),
+    inset 0 0 0 1px rgba(0, 104, 214, 0.08);
+}
+
+.bracket {
+  position: relative;
+}
+.bracket::before,
+.bracket::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #0068d6;
+  pointer-events: none;
+}
+.bracket::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.bracket::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Display & mono helpers */
+.font-display {
+  font-family: "Chakra Petch", sans-serif;
+  letter-spacing: 0.04em;
+}
+.font-mono-tech {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-feature-settings: "ss02", "cv01", "cv02";
+}
+
+/* Tag label like "// 01 SECTION" */
+.label-tech {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.45);
+}
+.label-tech::before {
+  content: "// ";
+  color: #0068d6;
+}
+
+/* Live REC pulse */
+@keyframes recBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.rec-dot {
+  animation: recBlink 1.4s ease-in-out infinite;
+}
+
+/* Leaflet dark */
+.leaflet-container {
+  background: #050505 !important;
+}
+.leaflet-tile {
+  filter: brightness(0.45) invert(1) contrast(1.05) hue-rotate(180deg)
+    saturate(0.35);
+}
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: #555 !important;
+  font-size: 9px !important;
+}
+.leaflet-control-attribution a {
+  color: #777 !important;
+}
+.leaflet-control-zoom a {
+  background: #0a0a0a !important;
+  color: #0068d6 !important;
+  border: 1px solid #232323 !important;
+}
+
+/* Diagram flow */
+.flow-line {
+  stroke-dasharray: 6 6;
+  animation: flowDash 1.5s linear infinite;
+}
+@keyframes flowDash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Selection */
+::selection {
+  background: #0068d6;
+  color: #fff;
+}
+
+/* === CRT SCANLINE OVERLAY === */
+.scanline::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* === GLITCH EFFECT === */
+@keyframes glitch {
+  0% { transform: translate(0); filter: none; }
+  20% { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
+  40% { transform: translate(2px, -1px); filter: hue-rotate(-90deg); }
+  60% { transform: translate(-1px, -1px); filter: saturate(5); }
+  80% { transform: translate(1px, 2px); filter: hue-rotate(180deg); }
+  100% { transform: translate(0); filter: none; }
+}
+.glitch-in {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* === TYPING CURSOR === */
+@keyframes blink-cursor {
+  0%, 100% { border-color: #0068d6; }
+  50% { border-color: transparent; }
+}
+.typing-cursor {
+  border-right: 2px solid #0068d6;
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
+/* === BOOT SEQUENCE === */
+@keyframes bootFade {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.boot-line {
+  opacity: 0;
+  animation: bootFade 0.3s ease-out forwards;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* === COUNTER FLASH === */
+@keyframes counterFlash {
+  0% { color: #0068d6; text-shadow: 0 0 12px rgba(0, 104, 214, 0.8); }
+  100% { color: inherit; text-shadow: none; }
+}
+.counter-flash {
+  animation: counterFlash 0.6s ease-out;
+}
+
+/* === LIVE DOT === */
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.7); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 200, 83, 0); }
+}
+.live-dot {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* === C — RIMAC-STYLE CTA WITH DECORATIVE LINES === */
+.cta-rimac {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: "Chakra Petch", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+.cta-rimac::before,
+.cta-rimac::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #0068d6, transparent);
+  transition: all 0.4s ease;
+}
+.cta-rimac::before { top: 0; }
+.cta-rimac::after { bottom: 0; }
+.cta-rimac:hover::before,
+.cta-rimac:hover::after {
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
+}
+.cta-rimac:hover {
+  letter-spacing: 0.5em;
+  color: #0068d6;
+}
+
+/* === G — SCROLL INDICATOR === */
+.scroll-indicator {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.scroll-indicator__track {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border-radius: 1px;
+}
+.scroll-indicator__thumb {
+  width: 100%;
+  height: 50%;
+  background: #0068d6;
+  animation: scrollThumb 2s ease-in-out infinite;
+}
+@keyframes scrollThumb {
+  0% { transform: translateY(-105%); }
+  50% { transform: translateY(105%); }
+  100% { transform: translateY(-105%); }
+}
+
+/* === H — SECTION TRANSITION ANIMATIONS === */
+@keyframes sectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.section-enter {
+  animation: sectionIn 0.5s ease-out forwards;
+}
+.section-enter > * {
+  opacity: 0;
+  animation: sectionIn 0.5s ease-out forwards;
+}
+.section-enter > *:nth-child(1) { animation-delay: 0.05s; }
+.section-enter > *:nth-child(2) { animation-delay: 0.12s; }
+.section-enter > *:nth-child(3) { animation-delay: 0.19s; }
+.section-enter > *:nth-child(4) { animation-delay: 0.26s; }
+.section-enter > *:nth-child(5) { animation-delay: 0.33s; }
+
+/* === J — DISPLAY NUMBERS (big KPI values) === */
+.num-display {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-feature-settings: "tnum";
+}
