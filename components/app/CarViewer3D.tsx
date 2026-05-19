@@ -1,9 +1,142 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export default function CarViewer3D() {
-  const bars = useMemo(() => Array.from({ length: 9 }, (_, index) => index), []);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    let model: THREE.Object3D | null = null;
+    let rafId = 0;
+    let disposed = false;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+    camera.position.set(0, 1.6, 5.2);
+    camera.lookAt(0, 0.4, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
+    mount.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.25));
+    const key = new THREE.DirectionalLight(0xffffff, 2.0);
+    key.position.set(3, 4, 5);
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0xffffff, 1.0);
+    fill.position.set(-4, 3, 2);
+    scene.add(fill);
+
+    const rim = new THREE.DirectionalLight(0xffffff, 0.75);
+    rim.position.set(0, 2, -4);
+    scene.add(rim);
+
+    const top = new THREE.DirectionalLight(0xffffff, 0.8);
+    top.position.set(0, 6, 0);
+    scene.add(top);
+
+    const underGlow = new THREE.Mesh(
+      new THREE.RingGeometry(0.9, 2.7, 96),
+      new THREE.MeshBasicMaterial({
+        color: "#0068D6",
+        transparent: true,
+        opacity: 0.11,
+        side: THREE.DoubleSide,
+      })
+    );
+    underGlow.position.set(0, 0.02, 0);
+    underGlow.rotation.x = -Math.PI / 2;
+    scene.add(underGlow);
+
+    const loader = new GLTFLoader();
+    loader.load(
+      "/models/ford_ranger_raptor.glb",
+      (gltf) => {
+        if (disposed) return;
+        model = gltf.scene;
+
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        model.position.sub(center);
+        model.position.y += size.y * 0.1;
+        model.scale.setScalar(0.43);
+
+        scene.add(model);
+        if (overlayRef.current) {
+          overlayRef.current.style.opacity = "0";
+        }
+      },
+      undefined,
+      () => {
+        if (disposed) return;
+        if (overlayRef.current) {
+          overlayRef.current.textContent = "Falha ao carregar modelo 3D";
+          overlayRef.current.style.opacity = "1";
+        }
+      }
+    );
+
+    const resize = () => {
+      const width = mount.clientWidth || 1;
+      const height = mount.clientHeight || 1;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    };
+
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(mount);
+
+    const animate = () => {
+      rafId = window.requestAnimationFrame(animate);
+      if (model) {
+        model.rotation.y += 0.004;
+      }
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    return () => {
+      disposed = true;
+      window.cancelAnimationFrame(rafId);
+      observer.disconnect();
+
+      if (model) {
+        model.traverse((node) => {
+          const mesh = node as THREE.Mesh;
+          if (!mesh.isMesh) return;
+          mesh.geometry?.dispose();
+          const material = mesh.material;
+          if (Array.isArray(material)) {
+            material.forEach((entry) => entry.dispose());
+          } else {
+            material?.dispose();
+          }
+        });
+      }
+
+      renderer.dispose();
+      if (renderer.domElement.parentNode === mount) {
+        mount.removeChild(renderer.domElement);
+      }
+    };
+  }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
@@ -14,34 +147,13 @@ export default function CarViewer3D() {
             "radial-gradient(circle at 50% 42%, rgba(0, 104, 214, 0.22), transparent 58%), radial-gradient(circle at 50% 100%, rgba(0, 52, 120, 0.45), transparent 62%)",
         }}
       />
+      <div ref={mountRef} className="absolute inset-0" />
 
-      <div className="absolute inset-x-0 bottom-14 h-px bg-gradient-to-r from-transparent via-ford-blue-light/40 to-transparent" />
-
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="relative w-[78%] max-w-[460px] aspect-[16/7]">
-          <div className="absolute inset-0 border border-ford-blue-light/35 rounded-[26px] bg-ford-blue-light/5 backdrop-blur-[1px]" />
-          <div className="absolute left-[10%] right-[10%] top-[14%] bottom-[36%] border border-ford-blue-light/45 rounded-[22px]" />
-          <div className="absolute left-[7%] right-[7%] bottom-[20%] h-[24%] border border-ford-blue-light/30 rounded-[12px]" />
-          <div className="absolute left-[17%] bottom-[7%] w-[18%] h-[18%] border border-ford-blue-light/45 rounded-full bg-ford-blue-light/10" />
-          <div className="absolute right-[17%] bottom-[7%] w-[18%] h-[18%] border border-ford-blue-light/45 rounded-full bg-ford-blue-light/10" />
-        </div>
-      </div>
-
-      <div className="absolute left-4 top-4 text-[9px] font-mono-tech uppercase tracking-[0.3em] text-ford-blue-light/55">
-        Simulacao visual
-      </div>
-
-      <div className="absolute inset-x-0 bottom-6 flex justify-center gap-2 px-8">
-        {bars.map((bar) => (
-          <span
-            key={bar}
-            className="h-1 rounded-full bg-ford-blue-light/35 animate-pulse"
-            style={{
-              width: `${24 + (bar % 3) * 12}px`,
-              animationDelay: `${bar * 0.18}s`,
-            }}
-          />
-        ))}
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 flex items-center justify-center bg-black/15 text-[10px] font-mono-tech uppercase tracking-[0.3em] text-ford-blue-light/60 transition-opacity duration-500 pointer-events-none"
+      >
+        Carregando 3D...
       </div>
     </div>
   );
