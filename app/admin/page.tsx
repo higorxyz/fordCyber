@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
 import GradientCanvas from "@/components/shared/GradientCanvas";
 import { getRole } from "@/lib/auth";
+import { maskEmailAddress } from "@/lib/ip";
 import {
   AdminUser,
   createAdminUser,
@@ -125,7 +126,7 @@ export default function AdminPage() {
       generatedParts.push(`username gerado: ${created.user.username}`);
     }
     if (created.generated.email) {
-      generatedParts.push(`e-mail gerado: ${created.user.email}`);
+      generatedParts.push(`e-mail gerado: ${maskEmailAddress(created.user.email)}`);
     }
     const generatedText =
       generatedParts.length > 0 ? ` ${generatedParts.join(" · ")}` : "";
@@ -291,7 +292,7 @@ export default function AdminPage() {
                   {users.map((user) => (
                     <tr key={user.id} className="border-t border-white/10">
                       <td className="py-3 px-2 font-mono-tech text-white/80">{user.username}</td>
-                      <td className="py-3 px-2">{user.email}</td>
+                      <td className="py-3 px-2">{maskEmailAddress(user.email)}</td>
                       <td className="py-3 px-2">
                         <select
                           className="bg-black/60 border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.2em]"

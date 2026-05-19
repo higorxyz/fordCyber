@@ -19,3 +19,22 @@ export function maskIpAddress(ip: string | null | undefined) {
   if (value.length <= 4) return "****";
   return `${value.slice(0, 4)}****`;
 }
+
+export function maskEmailAddress(email: string | null | undefined) {
+  if (!email) return "--";
+
+  const value = email.trim();
+  if (!value) return "--";
+
+  const atIndex = value.indexOf("@");
+  if (atIndex <= 0 || atIndex === value.length - 1) {
+    return value.length <= 3 ? "***" : `${value.slice(0, value.length - 3)}***`;
+  }
+
+  const localPart = value.slice(0, atIndex);
+  const domainPart = value.slice(atIndex);
+  const visibleLength = Math.max(0, localPart.length - 3);
+  const visible = localPart.slice(0, visibleLength);
+  const hidden = "*".repeat(localPart.length - visibleLength);
+  return `${visible}${hidden}${domainPart}`;
+}
