@@ -12,7 +12,7 @@ import { revokeSessionForUser } from "@/lib/server/sessions";
 
 export const runtime = "nodejs";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 export async function OPTIONS(req: NextRequest) {
   return handlePreflight(req);
@@ -37,7 +37,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       return errorResponse(req, 429, "rate_limited", "Too many requests", requestId);
     }
 
-    const targetId = params.id;
+    const { id: targetId } = await params;
     if (!targetId) {
       throw new ApiError(400, "invalid_session", "Invalid session");
     }

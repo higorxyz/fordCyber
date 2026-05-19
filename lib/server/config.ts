@@ -61,9 +61,21 @@ const bootstrapAdminUsername = parseOptionalEnv("BOOTSTRAP_ADMIN_USERNAME");
 const bootstrapAdminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD ?? "";
 const bootstrapAdminName = parseOptionalEnv("BOOTSTRAP_ADMIN_NAME") || "Administrador";
 const appBaseUrl = parseOptionalEnv("APP_BASE_URL") || (isProd ? "" : "http://localhost:3001");
+const databaseSsl = parseBoolean(process.env.DATABASE_SSL, true);
+const databaseSslRejectUnauthorized = parseBoolean(
+  process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
+  true
+);
+const databaseSslCa = parseOptionalEnv("DATABASE_SSL_CA").replace(/\\n/g, "\n");
 
 if (isProd && isVercel && !appBaseUrl) {
   throw new Error("Missing required env: APP_BASE_URL");
+}
+
+if (isProd && databaseSsl && !databaseSslRejectUnauthorized) {
+  throw new Error(
+    "Invalid env DATABASE_SSL_REJECT_UNAUTHORIZED: must be true in production"
+  );
 }
 
 if (
@@ -101,8 +113,11 @@ export const config = {
     8_000
   ),
   databaseUrl: process.env.DATABASE_URL?.trim() ?? "",
-  databaseSsl: parseBoolean(process.env.DATABASE_SSL, true),
+  databaseSsl,
+  databaseSslRejectUnauthorized,
+  databaseSslCa,
   databaseMaxConnections: parsePositiveInt(process.env.DATABASE_MAX_CONNECTIONS, 3),
+  trustProxyHeaders: parseBoolean(process.env.TRUST_PROXY_HEADERS, isVercel),
   rateLimits: {
     auth: { limit: 10, windowMs: 60_000 },
     api: { limit: 120, windowMs: 60_000 },

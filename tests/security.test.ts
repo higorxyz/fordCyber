@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { z } from "zod";
 
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "x".repeat(32);
@@ -8,6 +9,7 @@ process.env.PAYLOAD_SIGNING_SECRET = "z".repeat(32);
 process.env.CRON_SECRET = "c".repeat(24);
 process.env.APP_BASE_URL = "http://localhost:3001";
 process.env.ALLOWED_ORIGINS = "http://localhost:3001";
+process.env.TRUST_PROXY_HEADERS = "true";
 
 test("CSRF rejects mismatched token", async () => {
   const { requireCsrf } = await import("../lib/server/csrf");
@@ -66,4 +68,35 @@ test("Password reset token is single-use", async () => {
   const second = await consumePasswordReset(created.token);
   assert.equal(first?.userId, "user-1");
   assert.equal(second, null);
+});
+
+test("Body parser enforces UTF-8 byte limit", async () => {
+  const { readJsonBody } = await import("../lib/server/body");
+  const req = {
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "content-type" ? "application/json" : null,
+    },
+    text: async () => JSON.stringify({ message: "😀".repeat(20) }),
+  } as any;
+
+  await assert.rejects(() =>
+    readJsonBody(req, z.object({ message: z.string() }), 40)
+  );
+});
+
+test("Client IP parser only accepts valid forwarded IP values", async () => {
+  const { getClientIp } = await import("../lib/server/request");
+
+  const req = {
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "x-forwarded-for"
+          ? "unknown, 127.0.0.1:8080"
+          : null,
+    },
+    ip: "10.0.0.5",
+  } as any;
+
+  assert.equal(getClientIp(req), "127.0.0.1");
 });

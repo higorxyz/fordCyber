@@ -59,9 +59,14 @@ export async function POST(req: NextRequest) {
       actorRole = "admin";
     }
     const policy = await getSecurityPolicy();
-    const daysParam = Number(req.nextUrl.searchParams.get("days") ?? String(policy.retentionDays));
-    if (!Number.isFinite(daysParam) || daysParam <= 0) {
+    const daysQuery = req.nextUrl.searchParams.get("days");
+    const daysParam =
+      daysQuery === null ? policy.retentionDays : Number.parseInt(daysQuery, 10);
+    if (!Number.isFinite(daysParam) || !Number.isInteger(daysParam) || daysParam <= 0) {
       throw new ApiError(400, "invalid_days", "Invalid retention window");
+    }
+    if (daysParam > policy.retentionDays) {
+      throw new ApiError(400, "invalid_days", "Retention window exceeds policy");
     }
 
     const leadStore = await getLeadStore();

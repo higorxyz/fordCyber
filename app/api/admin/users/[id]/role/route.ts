@@ -19,7 +19,7 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id?: string } }
+  context: { params: Promise<{ id?: string }> }
 ) {
   const requestId = getRequestId(req);
   const ip = getClientIp(req);
@@ -45,7 +45,7 @@ export async function PATCH(
       return errorResponse(req, 429, "rate_limited", "Too many requests", requestId);
     }
 
-    const targetId = context.params.id;
+    const { id: targetId } = await context.params;
     if (!targetId) {
       throw new ApiError(400, "invalid_user", "Invalid user");
     }

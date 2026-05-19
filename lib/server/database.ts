@@ -21,7 +21,12 @@ function getPool() {
       global.__fordVisionPool ??
       new Pool({
         connectionString: config.databaseUrl,
-        ssl: config.databaseSsl ? { rejectUnauthorized: false } : false,
+        ssl: config.databaseSsl
+          ? {
+              rejectUnauthorized: config.databaseSslRejectUnauthorized,
+              ...(config.databaseSslCa ? { ca: config.databaseSslCa } : {}),
+            }
+          : false,
         max: config.databaseMaxConnections,
       });
     global.__fordVisionPool = pool;

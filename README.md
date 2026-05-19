@@ -10,7 +10,7 @@ A solução foi estruturada para operar em produção com Next.js (App Router) e
 
 ## Stack
 
-- Next.js 14 + React 18 + TypeScript
+- Next.js 16 + React 18 + TypeScript
 - TailwindCSS + Framer Motion
 - Recharts + Leaflet/React-Leaflet
 - PostgreSQL (`pg`)

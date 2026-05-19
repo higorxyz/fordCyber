@@ -160,9 +160,16 @@ export default function GlobeMap({ selected, onSelect }: Props) {
     };
   }, []);
 
-  const markerHtml = useCallback(
+  const createMarkerElement = useCallback(
     (d: any) => {
-      const dealer: Dealership = d.dealer;
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.width = "0";
+      wrapper.style.height = "0";
+
+      const dealer = d.dealer as Dealership | undefined;
+      if (!dealer) return wrapper;
+
       const color = LEVEL_COLORS[dealer.level];
       const isSel = selected?.id === dealer.id;
       const dotSize = isSel ? 16 : 10;
@@ -172,55 +179,75 @@ export default function GlobeMap({ selected, onSelect }: Props) {
       const alignRight = cfg?.align === "right";
       const hasOffset = ox !== 0 || oy !== 0;
 
-      const lineLen = Math.sqrt(ox * ox + oy * oy);
-      const lineAngle = Math.atan2(oy, ox) * (180 / Math.PI);
+      const dot = document.createElement("div");
+      dot.style.position = "absolute";
+      dot.style.width = `${dotSize}px`;
+      dot.style.height = `${dotSize}px`;
+      dot.style.borderRadius = "50%";
+      dot.style.background = color;
+      dot.style.boxShadow = `0 0 ${isSel ? 20 : 10}px ${color},0 0 ${
+        isSel ? 40 : 20
+      }px ${color}55`;
+      dot.style.border = isSel ? "2px solid white" : `1.5px solid ${color}`;
+      dot.style.transform = "translate(-50%,-50%)";
+      dot.style.transition = "all .3s";
+      dot.style.zIndex = "2";
+      wrapper.appendChild(dot);
 
-      return `
-        <div style="position:relative;width:0;height:0;">
-          <div style="
-            position:absolute;
-            width:${dotSize}px;height:${dotSize}px;
-            border-radius:50%;
-            background:${color};
-            box-shadow:0 0 ${isSel ? 20 : 10}px ${color},0 0 ${isSel ? 40 : 20}px ${color}55;
-            border:${isSel ? "2px solid white" : `1.5px solid ${color}`};
-            transform:translate(-50%,-50%);
-            transition:all .3s;z-index:2;
-          "></div>
-          ${hasOffset ? `<div style="
-            position:absolute;top:0;left:0;
-            width:${lineLen}px;height:1px;
-            background:linear-gradient(90deg,${color}66,${color}11);
-            transform-origin:0 0;
-            transform:rotate(${lineAngle}deg);
-            z-index:1;
-          "></div>` : ""}
-          <div style="
-            position:absolute;
-            left:${ox}px;top:${oy}px;
-            transform:translate(${alignRight ? "-100%" : "0"},-50%);
-            display:flex;flex-direction:column;
-            ${alignRight ? "align-items:flex-end;text-align:right;" : "align-items:flex-start;"}
-            white-space:nowrap;z-index:3;
-          ">
-            <div style="
-              font-family:'JetBrains Mono',monospace;
-              font-size:${isSel ? 11 : 9}px;
-              font-weight:${isSel ? 700 : 600};
-              color:white;opacity:${isSel ? 1 : 0.9};
-              text-shadow:0 0 6px #000,0 0 12px rgba(0,0,0,.8);
-              letter-spacing:.06em;text-transform:uppercase;line-height:1.2;
-            ">${dealer.name.replace("Ford ", "")}</div>
-            <div style="
-              font-family:'JetBrains Mono',monospace;
-              font-size:${isSel ? 13 : 10}px;font-weight:700;
-              color:${color};
-              text-shadow:0 0 8px ${color}66;
-              letter-spacing:.08em;line-height:1.3;
-            ">${dealer.vinShare}%</div>
-          </div>
-        </div>
-      `;
+      if (hasOffset) {
+        const lineLen = Math.sqrt(ox * ox + oy * oy);
+        const lineAngle = Math.atan2(oy, ox) * (180 / Math.PI);
+        const line = document.createElement("div");
+        line.style.position = "absolute";
+        line.style.top = "0";
+        line.style.left = "0";
+        line.style.width = `${lineLen}px`;
+        line.style.height = "1px";
+        line.style.background = `linear-gradient(90deg,${color}66,${color}11)`;
+        line.style.transformOrigin = "0 0";
+        line.style.transform = `rotate(${lineAngle}deg)`;
+        line.style.zIndex = "1";
+        wrapper.appendChild(line);
+      }
+
+      const label = document.createElement("div");
+      label.style.position = "absolute";
+      label.style.left = `${ox}px`;
+      label.style.top = `${oy}px`;
+      label.style.transform = `translate(${alignRight ? "-100%" : "0"},-50%)`;
+      label.style.display = "flex";
+      label.style.flexDirection = "column";
+      label.style.alignItems = alignRight ? "flex-end" : "flex-start";
+      label.style.textAlign = alignRight ? "right" : "left";
+      label.style.whiteSpace = "nowrap";
+      label.style.zIndex = "3";
+
+      const dealerName = document.createElement("div");
+      dealerName.style.fontFamily = "'JetBrains Mono',monospace";
+      dealerName.style.fontSize = `${isSel ? 11 : 9}px`;
+      dealerName.style.fontWeight = isSel ? "700" : "600";
+      dealerName.style.color = "white";
+      dealerName.style.opacity = isSel ? "1" : "0.9";
+      dealerName.style.textShadow = "0 0 6px #000,0 0 12px rgba(0,0,0,.8)";
+      dealerName.style.letterSpacing = ".06em";
+      dealerName.style.textTransform = "uppercase";
+      dealerName.style.lineHeight = "1.2";
+      dealerName.textContent = dealer.name.replace(/^Ford\s+/i, "");
+      label.appendChild(dealerName);
+
+      const vinShare = document.createElement("div");
+      vinShare.style.fontFamily = "'JetBrains Mono',monospace";
+      vinShare.style.fontSize = `${isSel ? 13 : 10}px`;
+      vinShare.style.fontWeight = "700";
+      vinShare.style.color = color;
+      vinShare.style.textShadow = `0 0 8px ${color}66`;
+      vinShare.style.letterSpacing = ".08em";
+      vinShare.style.lineHeight = "1.3";
+      vinShare.textContent = `${dealer.vinShare}%`;
+      label.appendChild(vinShare);
+
+      wrapper.appendChild(label);
+      return wrapper;
     },
     [selected]
   );
@@ -245,8 +272,7 @@ export default function GlobeMap({ selected, onSelect }: Props) {
         htmlLng="lng"
         htmlAltitude={0.015}
         htmlElement={(d: any) => {
-          const el = document.createElement("div");
-          el.innerHTML = markerHtml(d);
+          const el = createMarkerElement(d);
           el.style.pointerEvents = "auto";
           el.style.cursor = "pointer";
           el.onclick = () => handleMarkerClick(d);

@@ -22,7 +22,8 @@ export async function readJsonBody<S extends z.ZodTypeAny>(
   }
 
   const raw = await req.text();
-  if (raw.length > maxBytes) {
+  const rawBytes = Buffer.byteLength(raw, "utf8");
+  if (rawBytes > maxBytes) {
     throw new ApiError(413, "payload_too_large", "Payload too large");
   }
 
