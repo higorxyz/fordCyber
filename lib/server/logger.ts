@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
 import type { AuditEvent, Role, Store } from "./models";
-import { loadStore, saveStore, secureDeleteFile } from "./secureStore";
+import { loadStore, purgeStore, saveStore, secureDeleteFile } from "./secureStore";
 
 type LogEventInput = {
   type: string;
@@ -26,6 +26,7 @@ const SENSITIVE_KEY_PATTERN =
   /(pass(word)?|token|secret|authorization|cookie|session|credential|api[-_]?key|email|phone|cpf|cnpj|vin|plate|license|username|customer(name|email|phone)?|notes?)/i;
 
 let migrationPromise: Promise<void> | null = null;
+let migrationCompleted = false;
 let writeQueue: Promise<void> = Promise.resolve();
 
 export async function logEvent(input: LogEventInput) {
@@ -43,12 +44,25 @@ export async function logEvent(input: LogEventInput) {
       await saveStore(STORE_NAME, store);
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    if (isStoreCorruptionError(error)) {
+      await resetAuditStore([event]);
+      emitStructuredConsole("info", {
+        type: "audit_storage_recovered",
+        requestId: event.requestId,
+        details: {
+          originalType: event.type,
+        },
+      });
+      return;
+    }
+
     emitStructuredConsole("error", {
       type: "audit_storage_error",
       requestId: event.requestId,
       details: {
         originalType: event.type,
-        message: error instanceof Error ? error.message : "Unexpected error",
+        message,
       },
     });
   }
@@ -56,12 +70,43 @@ export async function logEvent(input: LogEventInput) {
 
 export async function getAuditEvents(limit: number) {
   await ensureLegacyAuditMigration();
-  const store = await loadStore<Store<AuditEvent>>(STORE_NAME, { items: [] });
+  let store: Store<AuditEvent>;
+  try {
+    store = await loadStore<Store<AuditEvent>>(STORE_NAME, { items: [] });
+  } catch (error) {
+    emitStructuredConsole("error", {
+      type: "audit_read_storage_error",
+      requestId: "audit_read",
+      details: {
+        message: error instanceof Error ? error.message : "Unexpected error",
+      },
+    });
+    if (isStoreCorruptionError(error)) {
+      await resetAuditStore();
+    }
+    store = { items: [] };
+  }
   const safeLimit = normalizeLimit(limit);
   return store.items
     .slice()
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, safeLimit);
+}
+
+async function resetAuditStore(seed: AuditEvent[] = []) {
+  try {
+    await enqueuePersist(async () => {
+      await purgeStore(STORE_NAME);
+      await saveStore(STORE_NAME, { items: seed.slice(0, MAX_EVENTS) });
+    });
+  } catch {
+    // Recovery is best-effort; keep request flow alive.
+  }
+}
+
+function isStoreCorruptionError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return /unable to authenticate data|unsupported state/i.test(error.message);
 }
 
 function normalizeLimit(limit: number) {
@@ -187,8 +232,25 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function ensureLegacyAuditMigration() {
+  if (migrationCompleted) {
+    return Promise.resolve();
+  }
+
   if (!migrationPromise) {
-    migrationPromise = migrateLegacyAuditLog();
+    migrationPromise = migrateLegacyAuditLog()
+      .then(() => {
+        migrationCompleted = true;
+      })
+      .catch(async (error) => {
+        if (isStoreCorruptionError(error)) {
+          await resetAuditStore();
+          return;
+        }
+        throw error;
+      })
+      .finally(() => {
+        migrationPromise = null;
+      });
   }
   return migrationPromise;
 }

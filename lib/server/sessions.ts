@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { execute, hasDatabase, queryRows, querySingleValue } from "./database";
-import { loadStore, saveStore } from "./secureStore";
+import { loadStore, purgeStore, saveStore } from "./secureStore";
 import type { Store, UserSession } from "./models";
 
 type SessionRow = {
@@ -77,11 +77,37 @@ async function ensureSessionsSchema() {
 }
 
 async function loadFallbackStore() {
-  return loadStore<SessionStore>(STORE_NAME, { items: [] });
+  try {
+    return await loadStore<SessionStore>(STORE_NAME, { items: [] });
+  } catch (error) {
+    if (!isStoreCorruptionError(error)) {
+      throw error;
+    }
+
+    console.warn(
+      `[sessions] failed to load encrypted store, resetting transient sessions: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+    try {
+      await purgeStore(STORE_NAME);
+      await saveStore(STORE_NAME, { items: [] });
+    } catch {
+      // Keep request flow alive with empty in-memory fallback.
+    }
+    return { items: [] };
+  }
 }
 
 async function saveFallbackStore(store: SessionStore) {
   await saveStore(STORE_NAME, store);
+}
+
+function isStoreCorruptionError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return /unable to authenticate data|unsupported state|invalid encrypted payload/i.test(
+    error.message
+  );
 }
 
 function pruneStore(store: SessionStore) {

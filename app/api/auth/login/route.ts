@@ -132,7 +132,14 @@ export async function POST(req: NextRequest) {
     if (isApiError(err)) {
       return errorResponse(req, err.status, err.code, err.safeMessage, requestId);
     }
-    await logEvent({ type: "auth_login_error", requestId, ip });
+    await logEvent({
+      type: "auth_login_error",
+      requestId,
+      ip,
+      details: {
+        message: err instanceof Error ? err.message : "Unexpected auth error",
+      },
+    });
     return errorResponse(req, 500, "server_error", "Request failed", requestId);
   }
 }

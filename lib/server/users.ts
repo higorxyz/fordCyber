@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { config } from "./config";
 import { execute, hasDatabase, queryRows, querySingleValue } from "./database";
-import { loadStore, saveStore } from "./secureStore";
+import { loadStore, purgeStore, saveStore } from "./secureStore";
 import type { Role, Store, User } from "./models";
 
 type UserRow = {
@@ -78,11 +78,36 @@ async function ensureUsersSchema() {
 }
 
 async function loadFallbackStore() {
-  return loadStore<Store<User>>(USERS_STORE, { items: [] });
+  try {
+    return await loadStore<Store<User>>(USERS_STORE, { items: [] });
+  } catch (error) {
+    if (!isStoreCorruptionError(error)) {
+      throw error;
+    }
+
+    console.warn(
+      `[users] failed to load encrypted store, resetting user store: ${
+        error instanceof Error ? error.message : "unknown_error"
+      }`
+    );
+    try {
+      await purgeStore(USERS_STORE);
+    } catch {
+      // Best-effort purge; caller still receives empty fallback and can reseed bootstrap users.
+    }
+    return { items: [] };
+  }
 }
 
 async function saveFallbackStore(store: Store<User>) {
   return saveStore(USERS_STORE, store);
+}
+
+function isStoreCorruptionError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return /unable to authenticate data|unsupported state|invalid encrypted payload/i.test(
+    error.message
+  );
 }
 
 export async function ensureBootstrapUsers() {
