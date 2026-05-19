@@ -78,7 +78,7 @@ export default function MyFord({ firstName }: Props) {
 
   return (
     <div className="relative bg-black">
-      <div className="relative h-[clamp(300px,42vh,380px)] md:h-[380px]">
+      <div className="relative h-[340px] md:h-[380px]">
         <CarViewer3D />
 
         {vehicles.length > 1 && (

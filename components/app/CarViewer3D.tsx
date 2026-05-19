@@ -14,15 +14,14 @@ export default function CarViewer3D() {
 
     let model: THREE.Object3D | null = null;
     let modelPivot: THREE.Group | null = null;
+    let framingSphere: THREE.Sphere | null = null;
     let rafId = 0;
     let disposed = false;
-    let modelSize = new THREE.Vector3(4.2, 1.7, 2.4);
-    let modelLookY = 0.55;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
-    camera.position.set(0, 1.2, 6.2);
-    camera.lookAt(0, modelLookY, 0);
+    camera.position.set(0, 1.6, 5.2);
+    camera.lookAt(0, 0.4, 0);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -33,6 +32,7 @@ export default function CarViewer3D() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
+    renderer.domElement.style.cssText = 'display:block;position:absolute;top:0;left:0;width:100%;height:100%;';
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.25));
     const key = new THREE.DirectionalLight(0xffffff, 2.0);
@@ -52,7 +52,7 @@ export default function CarViewer3D() {
     scene.add(top);
 
     const underGlow = new THREE.Mesh(
-      new THREE.RingGeometry(0.9, 2.7, 96),
+      new THREE.RingGeometry(0.8, 2.4, 96),
       new THREE.MeshBasicMaterial({
         color: "#0068D6",
         transparent: true,
@@ -60,62 +60,42 @@ export default function CarViewer3D() {
         side: THREE.DoubleSide,
       })
     );
-    underGlow.position.set(0, -0.06, 0);
+    underGlow.position.set(0, 0.01, 0);
     underGlow.rotation.x = -Math.PI / 2;
     scene.add(underGlow);
 
     modelPivot = new THREE.Group();
     scene.add(modelPivot);
 
-    const computeMeshBounds = (root: THREE.Object3D) => {
-      const bounds = new THREE.Box3();
-      const meshBounds = new THREE.Box3();
-
-      root.updateMatrixWorld(true);
-      root.traverse((node) => {
-        const mesh = node as THREE.Mesh;
-        if (!mesh.isMesh || !mesh.geometry || !mesh.visible) return;
-
-        const geometry = mesh.geometry as THREE.BufferGeometry;
-        if (!geometry.boundingBox) geometry.computeBoundingBox();
-        if (!geometry.boundingBox) return;
-
-        meshBounds.copy(geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
-        bounds.union(meshBounds);
-      });
-
-      if (bounds.isEmpty()) {
-        bounds.setFromObject(root);
+    const getFittedCameraDistance = (aspect: number, isMobileViewport: boolean) => {
+      if (!framingSphere) {
+        return isMobileViewport ? 6.0 : 5.2;
       }
 
-      return bounds;
+      const halfFovY = THREE.MathUtils.degToRad(camera.fov * 0.5);
+      const halfFovX = Math.atan(Math.tan(halfFovY) * aspect);
+      const limitingHalfFov = Math.max(0.12, Math.min(halfFovY, halfFovX));
+      const margin = isMobileViewport ? 1.12 : 1.04;
+      const fitted = (framingSphere.radius / Math.sin(limitingHalfFov)) * margin;
+
+      return THREE.MathUtils.clamp(
+        fitted,
+        isMobileViewport ? 5.9 : 4.9,
+        isMobileViewport ? 7.3 : 6.2
+      );
     };
 
     const updateCameraFraming = (width: number, height: number) => {
       const aspect = width / height;
-      const isNarrow = aspect < 0.82;
-      const fov = THREE.MathUtils.degToRad(camera.fov);
+      const isMobileViewport = window.innerWidth < 768;
 
       camera.aspect = aspect;
-
-      const fitHeightDistance =
-        (modelSize.y * (isNarrow ? 1.2 : 1.0)) / (2 * Math.tan(fov / 2));
-      const fitWidthDistance =
-        (modelSize.x * (isNarrow ? 1.75 : 1.25)) /
-        (2 * Math.tan(fov / 2) * aspect);
-      const fitDepthDistance = modelSize.z * (isNarrow ? 1.05 : 0.85);
-
-      const distance = Math.max(
-        fitHeightDistance,
-        fitWidthDistance,
-        fitDepthDistance,
-        isNarrow ? 5.6 : 4.9
-      );
-
-      camera.position.set(0, modelSize.y * (isNarrow ? 0.44 : 0.52), distance);
-      camera.lookAt(0, modelLookY, 0);
+      camera.fov = isMobileViewport ? 33 : 28;
+      const distance = getFittedCameraDistance(aspect, isMobileViewport);
+      camera.position.set(0, isMobileViewport ? 1.45 : 1.6, distance);
+      camera.lookAt(0, isMobileViewport ? 0.41 : 0.4, 0);
       camera.updateProjectionMatrix();
-      renderer.setSize(width, height, false);
+      renderer.setSize(width, height);
     };
 
     const loader = new GLTFLoader();
@@ -126,21 +106,17 @@ export default function CarViewer3D() {
         model = gltf.scene;
         model.scale.setScalar(0.43);
 
-        const box = computeMeshBounds(model);
+        const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        const minY = box.min.y;
+        const size = box.getSize(new THREE.Vector3());
 
-        model.position.set(-center.x, -minY - 0.02, -center.z);
+        model.position.sub(center);
+        model.position.y += size.y * 0.1;
 
         modelPivot.add(model);
 
-        const placedBounds = computeMeshBounds(modelPivot);
-        modelSize = placedBounds.getSize(new THREE.Vector3());
-        modelLookY = Math.max(0.2, modelSize.y * 0.36);
-
-        const glowScaleX = Math.max(1.2, modelSize.x * 0.62);
-        const glowScaleZ = Math.max(1.2, modelSize.z * 0.5);
-        underGlow.scale.set(glowScaleX, glowScaleZ, 1);
+        const fittedBox = new THREE.Box3().setFromObject(model);
+        framingSphere = fittedBox.getBoundingSphere(new THREE.Sphere());
 
         resize();
         if (overlayRef.current) {
