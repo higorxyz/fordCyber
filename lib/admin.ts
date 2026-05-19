@@ -49,6 +49,22 @@ export type MetricsResponse = {
   lastEventAt: string | null;
 };
 
+export type AdminUserCreateInput = {
+  username?: string;
+  email?: string;
+  password: string;
+  name?: string;
+  role?: AdminUser["role"];
+};
+
+export type AdminUserCreateResponse = {
+  user: AdminUser;
+  generated: {
+    username: boolean;
+    email: boolean;
+  };
+};
+
 export async function fetchUsers(limit = 50): Promise<AdminUser[]> {
   const res = await fetch(`/api/admin/users?limit=${limit}`, { cache: "no-store" });
   if (!res.ok) return [];
@@ -66,6 +82,41 @@ export async function updateUserRole(userId: string, role: AdminUser["role"]) {
       "X-CSRF-Token": csrfToken,
     },
     body: JSON.stringify({ role }),
+  });
+  return res.ok;
+}
+
+export async function createAdminUser(input: AdminUserCreateInput) {
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) return null;
+  const payload: AdminUserCreateInput = {
+    password: input.password,
+    role: input.role ?? "usuario",
+    ...(input.username ? { username: input.username } : {}),
+    ...(input.email ? { email: input.email } : {}),
+    ...(input.name ? { name: input.name } : {}),
+  };
+
+  const res = await fetch("/api/admin/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as AdminUserCreateResponse;
+}
+
+export async function deleteAdminUser(userId: string) {
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) return false;
+  const res = await fetch(`/api/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "X-CSRF-Token": csrfToken,
+    },
   });
   return res.ok;
 }

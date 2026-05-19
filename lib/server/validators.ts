@@ -62,7 +62,7 @@ const emailSchema = z
   .max(120)
   .transform((v) => v.trim().toLowerCase());
 
-const loginPasswordSchema = z.string().min(6).max(72);
+const loginPasswordSchema = z.string().min(4).max(72);
 const strongPasswordSchema = z
   .string()
   .min(12)
@@ -114,6 +114,41 @@ export const passwordResetSchema = z.object({
 export const userRoleUpdateSchema = z.object({
   role: z.enum(["usuario", "analista", "admin"]),
 });
+
+const relaxedPasswordSchema = z.string().min(4).max(72);
+
+function emptyStringToUndefined(value: unknown) {
+  if (typeof value !== "string") return value;
+  return value.trim().length === 0 ? undefined : value;
+}
+
+const optionalUsernameSchema = z.preprocess(
+  emptyStringToUndefined,
+  usernameSchema.optional()
+);
+
+const optionalEmailSchema = z.preprocess(
+  emptyStringToUndefined,
+  emailSchema.optional()
+);
+
+const optionalNameSchema = z.preprocess(
+  emptyStringToUndefined,
+  safeTextSchema(1, 80).optional()
+);
+
+export const adminUserCreateSchema = z
+  .object({
+    username: optionalUsernameSchema,
+    email: optionalEmailSchema,
+    password: relaxedPasswordSchema,
+    name: optionalNameSchema,
+    role: z.enum(["usuario", "analista", "admin"]).default("usuario"),
+  })
+  .strict()
+  .refine((value) => Boolean(value.username || value.email), {
+    message: "Either username or email is required",
+  });
 
 const brandSchema = z
   .string()

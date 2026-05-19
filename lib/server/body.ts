@@ -37,9 +37,89 @@ export async function readJsonBody<S extends z.ZodTypeAny>(
 
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
-    throw new ApiError(400, "invalid_payload", "Invalid payload");
+    const firstIssue = parsed.error.issues[0];
+    throw new ApiError(
+      400,
+      "invalid_payload",
+      firstIssue ? describeValidationIssue(firstIssue) : "Payload invalido"
+    );
   }
   return { raw, data: parsed.data as z.infer<S> };
+}
+
+function describeValidationIssue(issue: z.ZodIssue) {
+  const field = formatFieldPath(issue.path);
+
+  if (issue.code === z.ZodIssueCode.too_small) {
+    if (issue.type === "string") {
+      return `${field} deve ter no minimo ${issue.minimum} caracteres`;
+    }
+    if (issue.type === "number") {
+      return `${field} deve ser maior ou igual a ${issue.minimum}`;
+    }
+    return `${field} possui tamanho insuficiente`;
+  }
+
+  if (issue.code === z.ZodIssueCode.too_big) {
+    if (issue.type === "string") {
+      return `${field} deve ter no maximo ${issue.maximum} caracteres`;
+    }
+    if (issue.type === "number") {
+      return `${field} deve ser menor ou igual a ${issue.maximum}`;
+    }
+    return `${field} excede o limite permitido`;
+  }
+
+  if (issue.code === z.ZodIssueCode.invalid_string) {
+    if (issue.validation === "email") {
+      return `${field} deve ser um e-mail valido`;
+    }
+    return `${field} possui formato invalido`;
+  }
+
+  if (issue.code === z.ZodIssueCode.invalid_type) {
+    return `${field} com tipo invalido`;
+  }
+
+  if (issue.code === z.ZodIssueCode.invalid_enum_value) {
+    return `${field} possui um valor invalido`;
+  }
+
+  if (issue.code === z.ZodIssueCode.custom) {
+    return translateCustomIssueMessage(issue.message, field);
+  }
+
+  if (issue.message && issue.message !== "Invalid input") {
+    return `${field}: ${issue.message}`;
+  }
+  return `${field} invalido`;
+}
+
+function translateCustomIssueMessage(message: string, field: string) {
+  switch (message) {
+    case "Missing lowercase":
+      return `${field} deve conter pelo menos uma letra minuscula`;
+    case "Missing uppercase":
+      return `${field} deve conter pelo menos uma letra maiuscula`;
+    case "Missing number":
+      return `${field} deve conter pelo menos um numero`;
+    case "Missing symbol":
+      return `${field} deve conter pelo menos um simbolo`;
+    case "Missing identifier":
+      return "Informe usuario ou e-mail";
+    case "Potentially unsafe input":
+      return `${field} contem caracteres nao permitidos`;
+    case "Either username or email is required":
+      return "Informe username ou e-mail";
+    default:
+      return message || `${field} invalido`;
+  }
+}
+
+function formatFieldPath(path: Array<string | number>) {
+  if (!path || path.length === 0) return "Payload";
+  const joined = path.map((part) => String(part)).join(".");
+  return `Campo ${joined}`;
 }
 
 function enforcePayloadComplexity(value: unknown) {

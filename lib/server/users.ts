@@ -405,3 +405,25 @@ export async function updateUserPassword(userId: string, passwordHash: string) {
   await saveFallbackStore(store);
   return target;
 }
+
+export async function deleteUserById(userId: string): Promise<User | null> {
+  await ensureBootstrapUsers();
+  if (hasDatabase()) {
+    const rows = await queryRows<UserRow>(
+      `
+      DELETE FROM users
+      WHERE id = $1
+      RETURNING id, username, email, name, role, password_hash, refresh_token_hash, created_at, updated_at
+      `,
+      [userId]
+    );
+    return rows[0] ? mapRow(rows[0]) : null;
+  }
+
+  const store = await loadFallbackStore();
+  const index = store.items.findIndex((u) => u.id === userId);
+  if (index < 0) return null;
+  const [removed] = store.items.splice(index, 1);
+  await saveFallbackStore(store);
+  return removed ?? null;
+}

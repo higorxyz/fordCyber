@@ -130,7 +130,7 @@ export default function LoginPage() {
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(true);
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -158,17 +158,18 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
+    setError(null);
     setLoading(true);
-    const role =
+    const result =
       mode === "login"
         ? await login(user.trim(), pass.trim())
         : await register(user.trim(), email.trim(), pass.trim());
     setLoading(false);
-    if (!role) {
-      setError(true);
-      setTimeout(() => setError(false), 500);
+    if (!result.ok) {
+      setError(result.message);
       return;
     }
+    const role = result.role;
     if (role === "usuario") router.push("/app");
     else router.push("/command");
   }
@@ -350,8 +351,8 @@ export default function LoginPage() {
               />
             </div>
             {error && (
-              <p className="font-display text-ford-red text-xs tracking-[0.2em] uppercase">
-                ⚠ Credenciais inválidas — acesso negado
+              <p className="font-display text-ford-red text-xs tracking-[0.08em]">
+                {error}
               </p>
             )}
             <button
@@ -375,7 +376,10 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
+              onClick={() => {
+                setMode(mode === "login" ? "register" : "login");
+                setError(null);
+              }}
               className="font-mono-tech w-full text-[10px] text-white/50 uppercase tracking-[0.3em] mt-2 hover:text-white transition-colors"
             >
               {mode === "login" ? "Criar conta" : "Já tenho conta"}

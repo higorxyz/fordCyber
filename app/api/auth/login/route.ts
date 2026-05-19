@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     }
     const user = await findUserByIdentifier(identifier);
 
-    if (!user || !verifyPassword(user, data.password)) {
+    if (!user) {
       const result = await recordFailedLogin(identifier, ip);
       await logEvent({
         type: "auth_login_failed",
@@ -77,7 +77,27 @@ export async function POST(req: NextRequest) {
         });
         return errorResponse(req, 429, "account_locked", "Too many attempts", requestId);
       }
-      throw new ApiError(401, "invalid_credentials", "Invalid credentials");
+      throw new ApiError(404, "user_not_found", "Usuario ou e-mail nao encontrado");
+    }
+
+    if (!verifyPassword(user, data.password)) {
+      const result = await recordFailedLogin(identifier, ip);
+      await logEvent({
+        type: "auth_login_failed",
+        requestId,
+        ip,
+        details: { username: identifier, userId: user.id },
+      });
+      if (result.locked) {
+        await logEvent({
+          type: "auth_locked",
+          requestId,
+          ip,
+          details: { username: identifier, userId: user.id },
+        });
+        return errorResponse(req, 429, "account_locked", "Too many attempts", requestId);
+      }
+      throw new ApiError(401, "invalid_password", "Senha incorreta");
     }
 
     await clearLoginGuard(identifier);

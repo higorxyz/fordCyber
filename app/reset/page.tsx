@@ -21,6 +21,14 @@ function ResetContent() {
     prefetchCsrf();
   }, []);
 
+  function handleGoBack() {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  }
+
   async function handleRequestReset(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
@@ -30,11 +38,11 @@ function ResetContent() {
     const result = await requestPasswordReset(identifier.trim().toLowerCase());
     setLoading(false);
     if (!result.ok) {
-      setError("Não foi possível enviar o link agora.");
+      setError(result.message);
       return;
     }
     setPreviewUrl(result.previewUrl ?? null);
-    setSuccess("Se o usuário existir, você receberá um link seguro.");
+    setSuccess("Solicitacao processada com sucesso.");
   }
 
   async function handleReset(e: React.FormEvent) {
@@ -47,10 +55,10 @@ function ResetContent() {
       return;
     }
     setLoading(true);
-    const ok = await resetPassword(token, password.trim());
+    const result = await resetPassword(token, password.trim());
     setLoading(false);
-    if (!ok) {
-      setError("Token inválido ou expirado.");
+    if (!result.ok) {
+      setError(result.message);
       return;
     }
     setSuccess("Senha redefinida. Faça login novamente.");
@@ -88,6 +96,13 @@ function ResetContent() {
                 className="font-display w-full py-2 bg-ford-blue-light text-black font-bold tracking-[0.3em] uppercase text-[11px]"
               >
                 {loading ? "ENVIANDO..." : "Enviar link"}
+              </button>
+              <button
+                type="button"
+                onClick={handleGoBack}
+                className="font-mono-tech w-full py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 border border-white/20 hover:text-white hover:border-white/40 transition-colors"
+              >
+                Voltar
               </button>
             </form>
           )}

@@ -1,12 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
 import GradientCanvas from "@/components/shared/GradientCanvas";
 import { getRole } from "@/lib/auth";
-import { AdminUser, fetchUsers, updateUserRole } from "@/lib/admin";
+import {
+  AdminUser,
+  createAdminUser,
+  deleteAdminUser,
+  fetchUsers,
+  updateUserRole,
+} from "@/lib/admin";
+
+type Notice = {
+  kind: "success" | "error";
+  text: string;
+};
+
+const EMPTY_FORM = {
+  username: "",
+  email: "",
+  password: "",
+  name: "",
+  role: "usuario" as AdminUser["role"],
+};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -14,6 +33,10 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -32,7 +55,6 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authChecked) return;
     let active = true;
-    setLoading(true);
     fetchUsers()
       .then((items) => {
         if (active) setUsers(items);
@@ -48,11 +70,90 @@ export default function AdminPage() {
   async function handleRoleChange(userId: string, role: AdminUser["role"]) {
     setUpdatingId(userId);
     const ok = await updateUserRole(userId, role);
-    if (ok) {
-      const refreshed = await fetchUsers();
-      setUsers(refreshed);
+    if (!ok) {
+      setNotice({ kind: "error", text: "Não foi possível atualizar o papel." });
+      setUpdatingId(null);
+      return;
     }
+    setNotice({ kind: "success", text: "Papel atualizado com sucesso." });
+    const refreshed = await fetchUsers();
+    setUsers(refreshed);
     setUpdatingId(null);
+  }
+
+  async function handleCreateUser(e: FormEvent) {
+    e.preventDefault();
+    if (creating) return;
+
+    const username = form.username.trim().toLowerCase();
+    const email = form.email.trim().toLowerCase();
+    const password = form.password.trim();
+    const name = form.name.trim();
+
+    if (!username && !email) {
+      setNotice({
+        kind: "error",
+        text: "Informe ao menos username ou e-mail para criar o usuário.",
+      });
+      return;
+    }
+    if (password.length < 4) {
+      setNotice({ kind: "error", text: "A senha deve ter no mínimo 4 caracteres." });
+      return;
+    }
+
+    setCreating(true);
+    const created = await createAdminUser({
+      username: username || undefined,
+      email: email || undefined,
+      password,
+      name: name || undefined,
+      role: form.role,
+    });
+    setCreating(false);
+
+    if (!created) {
+      setNotice({ kind: "error", text: "Não foi possível criar o usuário." });
+      return;
+    }
+
+    const generatedParts: string[] = [];
+    if (created.generated.username) {
+      generatedParts.push(`username gerado: ${created.user.username}`);
+    }
+    if (created.generated.email) {
+      generatedParts.push(`e-mail gerado: ${created.user.email}`);
+    }
+    const generatedText =
+      generatedParts.length > 0 ? ` ${generatedParts.join(" · ")}` : "";
+
+    setNotice({
+      kind: "success",
+      text: `Usuário criado com sucesso.${generatedText}`,
+    });
+    setForm(EMPTY_FORM);
+    const refreshed = await fetchUsers();
+    setUsers(refreshed);
+  }
+
+  async function handleDeleteUser(user: AdminUser) {
+    const confirmed = window.confirm(
+      `Excluir o usuário ${user.username}? Esta ação não pode ser desfeita.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(user.id);
+    const ok = await deleteAdminUser(user.id);
+    setDeletingId(null);
+
+    if (!ok) {
+      setNotice({ kind: "error", text: "Não foi possível excluir o usuário." });
+      return;
+    }
+
+    setNotice({ kind: "success", text: "Usuário excluído com sucesso." });
+    const refreshed = await fetchUsers();
+    setUsers(refreshed);
   }
 
   if (!authChecked) return null;
@@ -84,6 +185,89 @@ export default function AdminPage() {
           </Link>
         </div>
 
+        <div className="ford-card p-4 border border-ford-blue/40 bg-black/70 mb-6">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2">
+            Criar usuário (admin)
+          </div>
+          <p className="text-[11px] text-white/60 mb-4">
+            Para criação via admin: informe ao menos username ou e-mail e senha
+            com mínimo de 4 caracteres.
+          </p>
+
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input
+                value={form.username}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, username: e.target.value }))
+                }
+                placeholder="Username (opcional se e-mail preenchido)"
+                className="bg-black/60 border border-white/20 px-3 py-2 text-[11px]"
+              />
+              <input
+                value={form.email}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, email: e.target.value }))
+                }
+                placeholder="E-mail (opcional se username preenchido)"
+                className="bg-black/60 border border-white/20 px-3 py-2 text-[11px]"
+              />
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, password: e.target.value }))
+                }
+                placeholder="Senha (mínimo 4 caracteres)"
+                className="bg-black/60 border border-white/20 px-3 py-2 text-[11px]"
+              />
+              <input
+                value={form.name}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Nome (opcional)"
+                className="bg-black/60 border border-white/20 px-3 py-2 text-[11px]"
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <select
+                value={form.role}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    role: e.target.value as AdminUser["role"],
+                  }))
+                }
+                className="bg-black/60 border border-white/20 px-3 py-2 text-[11px] uppercase tracking-[0.2em]"
+              >
+                <option value="usuario">usuario</option>
+                <option value="analista">analista</option>
+                <option value="admin">admin</option>
+              </select>
+
+              <button
+                type="submit"
+                disabled={creating}
+                className="font-display px-4 py-2 text-[10px] uppercase tracking-[0.3em] border border-ford-blue-light text-ford-blue-light hover:bg-ford-blue-light/10 disabled:opacity-50"
+              >
+                {creating ? "Criando..." : "Criar usuário"}
+              </button>
+            </div>
+          </form>
+
+          {notice && (
+            <div
+              className={`mt-4 text-[11px] ${
+                notice.kind === "success" ? "text-green-400" : "text-ford-red"
+              }`}
+            >
+              {notice.text}
+            </div>
+          )}
+        </div>
+
         <div className="ford-card p-4 border border-ford-blue/40 bg-black/70">
           {loading ? (
             <div className="font-mono-tech text-xs text-white/60">Carregando usuários...</div>
@@ -96,6 +280,7 @@ export default function AdminPage() {
                     <th className="py-3 px-2">E-mail</th>
                     <th className="py-3 px-2">Papel</th>
                     <th className="py-3 px-2">Criado</th>
+                    <th className="py-3 px-2">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,7 +295,7 @@ export default function AdminPage() {
                           onChange={(e) =>
                             handleRoleChange(user.id, e.target.value as AdminUser["role"])
                           }
-                          disabled={updatingId === user.id}
+                          disabled={updatingId === user.id || deletingId === user.id}
                         >
                           <option value="usuario">usuario</option>
                           <option value="analista">analista</option>
@@ -118,6 +303,15 @@ export default function AdminPage() {
                         </select>
                       </td>
                       <td className="py-3 px-2">{new Date(user.createdAt).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-3 px-2">
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={deletingId === user.id || updatingId === user.id}
+                          className="font-display text-[9px] uppercase tracking-[0.3em] text-ford-red hover:text-ford-red-dark disabled:opacity-50"
+                        >
+                          {deletingId === user.id ? "Excluindo..." : "Excluir"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

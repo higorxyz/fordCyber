@@ -85,6 +85,47 @@ test("Body parser enforces UTF-8 byte limit", async () => {
   );
 });
 
+test("Admin user creation schema accepts one credential with 4-char password", async () => {
+  const { adminUserCreateSchema } = await import("../lib/server/validators");
+
+  const withUsernameOnly = adminUserCreateSchema.safeParse({
+    username: "new-operator",
+    password: "1234",
+    role: "usuario",
+  });
+  const withEmailOnly = adminUserCreateSchema.safeParse({
+    email: "operator@ford.local",
+    password: "abcd",
+    role: "analista",
+  });
+
+  assert.equal(withUsernameOnly.success, true);
+  assert.equal(withEmailOnly.success, true);
+});
+
+test("Regular registration remains strict for non-admin flows", async () => {
+  const { registerSchema } = await import("../lib/server/validators");
+
+  const weakPassword = registerSchema.safeParse({
+    username: "normal-user",
+    email: "normal@ford.local",
+    password: "1234",
+  });
+
+  assert.equal(weakPassword.success, false);
+});
+
+test("Login schema allows 4-char passwords for admin-created users", async () => {
+  const { loginSchema } = await import("../lib/server/validators");
+
+  const parsed = loginSchema.safeParse({
+    identifier: "admin-user",
+    password: "1234",
+  });
+
+  assert.equal(parsed.success, true);
+});
+
 test("Client IP parser only accepts valid forwarded IP values", async () => {
   const { getClientIp } = await import("../lib/server/request");
 

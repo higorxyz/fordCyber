@@ -45,49 +45,58 @@ export async function POST(req: NextRequest) {
     const { data } = await readJsonBody(req, passwordForgotSchema);
     const user = await findUserByIdentifier(data.identifier);
 
-    if (user) {
-      await clearPasswordResetsForUser(user.id);
-      const { token } = await createPasswordReset({
-        userId: user.id,
-        requestedIp: ip,
-        requestedUserAgent: userAgent,
-      });
-      const baseUrl = config.appBaseUrl.replace(/\/$/, "");
-      const resetUrl = `${baseUrl}/reset?token=${encodeURIComponent(token)}`;
-      let sent = false;
-
-      try {
-        sent = await sendPasswordResetEmail({
-          to: user.email,
-          resetUrl,
-          expiresMinutes: config.passwordResetTtlMinutes,
-        });
-      } catch (error) {
-        await logEvent({
-          type: "password_reset_send_failed",
-          actorId: user.id,
-          actorRole: user.role,
-          requestId,
-          ip,
-          details: {
-            message: error instanceof Error ? error.message : "Unexpected error",
-          },
-        });
-      }
-
+    if (!user) {
       await logEvent({
-        type: sent ? "password_reset_sent" : "password_reset_pending",
+        type: "password_reset_requested_unknown",
+        requestId,
+        ip,
+        details: { identifier: data.identifier },
+      });
+      throw new ApiError(404, "user_not_found", "Usuario ou e-mail nao encontrado");
+    }
+
+    await clearPasswordResetsForUser(user.id);
+    const { token } = await createPasswordReset({
+      userId: user.id,
+      requestedIp: ip,
+      requestedUserAgent: userAgent,
+    });
+    const baseUrl = config.appBaseUrl.replace(/\/$/, "");
+    const resetUrl = `${baseUrl}/reset?token=${encodeURIComponent(token)}`;
+    let sent = false;
+
+    try {
+      sent = await sendPasswordResetEmail({
+        to: user.email,
+        resetUrl,
+        expiresMinutes: config.passwordResetTtlMinutes,
+      });
+    } catch (error) {
+      await logEvent({
+        type: "password_reset_send_failed",
         actorId: user.id,
         actorRole: user.role,
         requestId,
         ip,
+        details: {
+          message: error instanceof Error ? error.message : "Unexpected error",
+        },
       });
+    }
 
-      if (!sent && !isProduction) {
+    await logEvent({
+      type: sent ? "password_reset_sent" : "password_reset_pending",
+      actorId: user.id,
+      actorRole: user.role,
+      requestId,
+      ip,
+    });
+
+    if (!sent) {
+      if (!isProduction) {
         return jsonResponse(req, { ok: true, previewUrl: resetUrl }, 200);
       }
-    } else {
-      await logEvent({ type: "password_reset_requested_unknown", requestId, ip });
+      throw new ApiError(503, "email_delivery_failed", "Nao foi possivel enviar o e-mail agora");
     }
 
     return jsonResponse(req, { ok: true }, 200);

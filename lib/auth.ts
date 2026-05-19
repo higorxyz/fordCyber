@@ -11,6 +11,14 @@ type CsrfResponse = {
   token: string;
 };
 
+type ApiErrorResponse = {
+  error?: {
+    code?: string;
+    message?: string;
+    requestId?: string;
+  };
+};
+
 export type SessionInfo = {
   id: string;
   userId: string;
@@ -26,6 +34,33 @@ type SessionsResponse = {
   items: SessionInfo[];
   currentSessionId?: string;
 };
+
+type ActionError = {
+  ok: false;
+  message: string;
+  code?: string;
+  status?: number;
+};
+
+export type AuthActionResult =
+  | {
+      ok: true;
+      role: Role;
+    }
+  | ActionError;
+
+export type PasswordResetRequestResult =
+  | {
+      ok: true;
+      previewUrl?: string;
+    }
+  | ActionError;
+
+export type PasswordResetActionResult =
+  | {
+      ok: true;
+    }
+  | ActionError;
 
 let csrfTokenCache: string | null = null;
 
@@ -58,9 +93,36 @@ export async function getCsrfToken() {
   return ensureCsrfToken();
 }
 
-export async function login(identifier: string, password: string): Promise<Role | null> {
+async function parseErrorResponse(res: Response, fallbackMessage: string): Promise<ActionError> {
+  try {
+    const data = (await res.json()) as ApiErrorResponse;
+    const message = data.error?.message?.trim();
+    return {
+      ok: false,
+      message: message && message.length > 0 ? message : fallbackMessage,
+      code: data.error?.code,
+      status: res.status,
+    };
+  } catch {
+    return {
+      ok: false,
+      message: fallbackMessage,
+      status: res.status,
+    };
+  }
+}
+
+export async function login(
+  identifier: string,
+  password: string
+): Promise<AuthActionResult> {
   const csrfToken = await ensureCsrfToken();
-  if (!csrfToken) return null;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
@@ -70,14 +132,34 @@ export async function login(identifier: string, password: string): Promise<Role 
     body: JSON.stringify({ identifier, password }),
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    return parseErrorResponse(res, "Nao foi possivel concluir o login");
+  }
   const data = (await res.json()) as SessionResponse;
-  return data.role ?? null;
+  if (!data.role) {
+    return {
+      ok: false,
+      message: "Resposta invalida do servidor",
+    };
+  }
+  return {
+    ok: true,
+    role: data.role,
+  };
 }
 
-export async function register(username: string, email: string, password: string): Promise<Role | null> {
+export async function register(
+  username: string,
+  email: string,
+  password: string
+): Promise<AuthActionResult> {
   const csrfToken = await ensureCsrfToken();
-  if (!csrfToken) return null;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
   const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: {
@@ -86,9 +168,20 @@ export async function register(username: string, email: string, password: string
     },
     body: JSON.stringify({ username, email, password }),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    return parseErrorResponse(res, "Nao foi possivel criar a conta");
+  }
   const data = (await res.json()) as SessionResponse;
-  return data.role ?? null;
+  if (!data.role) {
+    return {
+      ok: false,
+      message: "Resposta invalida do servidor",
+    };
+  }
+  return {
+    ok: true,
+    role: data.role,
+  };
 }
 
 export async function getRole(): Promise<Role | null> {
@@ -134,9 +227,16 @@ export async function logoutAll() {
   return res.ok;
 }
 
-export async function requestPasswordReset(identifier: string) {
+export async function requestPasswordReset(
+  identifier: string
+): Promise<PasswordResetRequestResult> {
   const csrfToken = await ensureCsrfToken();
-  if (!csrfToken) return { ok: false };
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
   const res = await fetch("/api/auth/forgot", {
     method: "POST",
     headers: {
@@ -145,13 +245,33 @@ export async function requestPasswordReset(identifier: string) {
     },
     body: JSON.stringify({ identifier }),
   });
-  if (!res.ok) return { ok: false };
-  return (await res.json()) as { ok: boolean; previewUrl?: string };
+  if (!res.ok) {
+    return parseErrorResponse(res, "Nao foi possivel enviar o link agora");
+  }
+  const data = (await res.json()) as { ok?: boolean; previewUrl?: string };
+  if (!data.ok) {
+    return {
+      ok: false,
+      message: "Nao foi possivel enviar o link agora",
+    };
+  }
+  return {
+    ok: true,
+    previewUrl: data.previewUrl,
+  };
 }
 
-export async function resetPassword(token: string, password: string) {
+export async function resetPassword(
+  token: string,
+  password: string
+): Promise<PasswordResetActionResult> {
   const csrfToken = await ensureCsrfToken();
-  if (!csrfToken) return false;
+  if (!csrfToken) {
+    return {
+      ok: false,
+      message: "Nao foi possivel iniciar a sessao segura. Atualize a pagina.",
+    };
+  }
   const res = await fetch("/api/auth/reset", {
     method: "POST",
     headers: {
@@ -160,7 +280,17 @@ export async function resetPassword(token: string, password: string) {
     },
     body: JSON.stringify({ token, password }),
   });
-  return res.ok;
+  if (!res.ok) {
+    return parseErrorResponse(res, "Nao foi possivel redefinir a senha");
+  }
+  const data = (await res.json()) as { ok?: boolean };
+  if (!data.ok) {
+    return {
+      ok: false,
+      message: "Nao foi possivel redefinir a senha",
+    };
+  }
+  return { ok: true };
 }
 
 export async function fetchSessions() {

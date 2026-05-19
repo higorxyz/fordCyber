@@ -10,7 +10,7 @@ import { logEvent } from "@/lib/server/logger";
 import { getClientIp, getUserAgent } from "@/lib/server/request";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { registerSchema } from "@/lib/server/validators";
-import { createUser } from "@/lib/server/users";
+import { createUser, findUserByEmail, findUserByUsername } from "@/lib/server/users";
 
 export const runtime = "nodejs";
 
@@ -37,6 +37,28 @@ export async function POST(req: NextRequest) {
     }
 
     const { data } = await readJsonBody(req, registerSchema);
+    const existingByUsername = await findUserByUsername(data.username);
+    if (existingByUsername) {
+      await logEvent({
+        type: "auth_register_conflict",
+        requestId,
+        ip,
+        details: { username: data.username, reason: "username_taken" },
+      });
+      throw new ApiError(409, "username_taken", "Username ja cadastrado");
+    }
+
+    const existingByEmail = await findUserByEmail(data.email);
+    if (existingByEmail) {
+      await logEvent({
+        type: "auth_register_conflict",
+        requestId,
+        ip,
+        details: { email: data.email, reason: "email_taken" },
+      });
+      throw new ApiError(409, "email_taken", "E-mail ja cadastrado");
+    }
+
     const passwordHash = bcrypt.hashSync(data.password, 10);
     const created = await createUser({
       username: data.username,
@@ -53,7 +75,7 @@ export async function POST(req: NextRequest) {
         ip,
         details: { username: data.username, email: data.email },
       });
-      throw new ApiError(400, "registration_failed", "Registration failed");
+      throw new ApiError(409, "registration_failed", "Nao foi possivel criar a conta agora");
     }
 
     const tokens = await createSessionTokens(created, { ip, userAgent: getUserAgent(req) });
