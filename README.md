@@ -1,35 +1,44 @@
-# Ford Vision — Entrega Cybersecurity
+# Ford Vision - Entrega Cybersecurity
 
-Projeto acadêmico com foco em segurança de aplicação web para um cenário de retenção inteligente em concessionárias. Esta entrega prioriza proteção de API, sessão, dados sensíveis e operação em produção.
+Projeto acadêmico desenvolvido para a disciplina de Cybersecurity, com foco em proteção de APIs, autenticação segura, controle de acesso por papéis, privacidade de dados e auditoria de eventos.
 
-> Não é um produto oficial da Ford Motor Company. Marcas e logotipos pertencem aos seus respectivos donos e são usados aqui apenas para demonstração.
+> Este projeto não é um produto oficial da Ford Motor Company. Marcas e logotipos são usados apenas para fins educacionais.
 
-## Visão da entrega
+## Objetivo desta entrega
 
-A solução foi estruturada para operar em produção com Next.js (App Router) e backend seguro em rotas server-side, incluindo autenticação com cookies HTTP-only, autorização por papel, validação rigorosa de entrada, proteção de tráfego, trilha de auditoria e persistência criptografada com PostgreSQL.
+A entrega prioriza requisitos de segurança ponta a ponta em um cenário de concessionária:
 
-## Stack
+- validação rigorosa de entrada
+- autenticação com JWT e cookies HTTP-only
+- autorização por papel (usuario, analista, admin)
+- proteção contra abuso com rate limit
+- trilha de auditoria com logs estruturados
+- criptografia de dados sensíveis em repouso
 
-- Next.js 16 + React 18 + TypeScript
-- TailwindCSS + Framer Motion
-- Recharts + Leaflet/React-Leaflet
+## Tecnologias utilizadas
+
+- Next.js 16 (App Router), React 18 e TypeScript
+- TailwindCSS e Framer Motion
+- Recharts e Leaflet
 - PostgreSQL (`pg`)
-- Zod, jose, bcryptjs
+- Zod, jose e bcryptjs
 
-## Rotas principais da aplicação
+## Rotas principais
 
-| Rota       | Finalidade |
-|------------|------------|
-| `/`        | Autenticação |
-| `/app`     | App cliente |
+| Rota | Finalidade |
+|------|------------|
+| `/` | Login e autenticação |
+| `/app` | Visão do cliente |
 | `/command` | Command Center |
-| `/motor`   | Visão técnica do motor |
-| `/sessions` | Sessões ativas |
-| `/admin`   | Gestão de usuários |
-| `/admin/audit` | Auditoria |
-| `/reset`   | Recuperação de senha |
+| `/motor` | Visão técnica do motor |
+| `/sessions` | Gestão de sessões ativas |
+| `/admin` | Gestão administrativa |
+| `/admin/audit` | Auditoria de eventos |
+| `/reset` | Redefinição de senha |
 
-## Endpoints principais
+## API (resumo)
+
+### Autenticação e sessão
 
 - `POST /api/auth/login`
 - `POST /api/auth/register`
@@ -42,6 +51,9 @@ A solução foi estruturada para operar em produção com Next.js (App Router) e
 - `GET /api/auth/session`
 - `GET /api/auth/sessions`
 - `DELETE /api/auth/sessions/:id`
+
+### Domínio de negócio
+
 - `GET /api/leads`
 - `POST /api/leads`
 - `GET /api/leads/anon`
@@ -49,6 +61,9 @@ A solução foi estruturada para operar em produção com Next.js (App Router) e
 - `POST /api/vehicles`
 - `GET /api/maintenance`
 - `POST /api/maintenance`
+
+### Auditoria e administração
+
 - `GET /api/audit`
 - `GET /api/admin/metrics`
 - `POST /api/admin/retention/run`
@@ -57,7 +72,7 @@ A solução foi estruturada para operar em produção com Next.js (App Router) e
 - `GET /api/admin/users`
 - `PATCH /api/admin/users/:id/role`
 
-## Configuração local
+## Como rodar localmente
 
 Pré-requisito: Node.js 18+.
 
@@ -66,9 +81,9 @@ npm install
 npm run dev
 ```
 
-Acesse `http://localhost:3001`.
+A aplicação sobe em: `http://localhost:3001`
 
-### Scripts
+### Scripts úteis
 
 ```bash
 npm run build
@@ -78,24 +93,32 @@ npm run db:migrate
 npm run test
 ```
 
-## Produção (Vercel + PostgreSQL)
+## Acesso para avaliação
+
+Para facilitar os testes do sistema, existem usuários de demonstração com usuário e senha iguais:
+
+| Perfil | Usuário | Senha |
+|--------|---------|-------|
+| Admin | `admin` | `admin` |
+| Analista | `analista` | `analista` |
+| Cliente | `cliente` | `cliente` |
+
+Observação: os usuários de teste devem ser usados apenas para avaliação/homologação.
+
+## Deploy em produção (Vercel + PostgreSQL)
 
 1. Configure variáveis de ambiente com base no `.env.example`.
-2. Defina `ALLOWED_ORIGINS` com o domínio do deploy.
-3. Configure `APP_BASE_URL` com o domínio do deploy (usado no reset de senha).
-4. Configure `DATABASE_URL` e `DATABASE_SSL`.
-5. Configure SMTP (`SMTP_HOST/PORT/USER/PASS/FROM`) para envio de reset.
-6. Execute migração SQL antes de abrir tráfego: `npm run db:migrate`.
-7. Use `SEED_DEMO_USERS=false` em produção e crie acesso administrativo via variáveis de bootstrap.
+2. Defina `ALLOWED_ORIGINS` com o domínio oficial do deploy.
+3. Configure `APP_BASE_URL` com a URL pública (usada no reset de senha).
+4. Configure `DATABASE_URL`, `DATABASE_SSL` e parâmetros de certificado.
+5. Configure SMTP (`SMTP_HOST/PORT/USER/PASS/FROM`) para envio de e-mails.
+6. Rode as migrações antes de abrir tráfego: `npm run db:migrate`.
+7. Em produção, mantenha `SEED_DEMO_USERS=false`.
 
-## Participantes do grupo
+## Integrantes
 
 - Bento Rangel - RM559124
 - Eric Yuji - RM554869
 - Higor Batista - RM558907
 - Kaue Pires - RM554403
 - Ricardo Di Tilia - RM555155
-
-## Observações
-
-As credenciais demo existem apenas em ambiente de desenvolvimento quando `SEED_DEMO_USERS=true`.
