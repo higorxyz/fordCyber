@@ -35,7 +35,7 @@ export default function LeadsRadar() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="label-tech mb-2">02 · OPERAÇÕES</div>
           <h2 className="font-display text-3xl font-bold tracking-[0.05em] uppercase">
@@ -45,7 +45,7 @@ export default function LeadsRadar() {
             Fila rankeada · ML · gerada às 06:00
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Filter className="w-3.5 h-3.5 text-white/40" />
           <select
             value={region}

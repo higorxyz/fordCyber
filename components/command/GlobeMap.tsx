@@ -50,8 +50,13 @@ export default function GlobeMap({ selected, onSelect }: Props) {
   const [dimensions, setDimensions] = useState({ w: 1200, h: 700 });
 
   useEffect(() => {
-    const update = () =>
-      setDimensions({ w: window.innerWidth, h: window.innerHeight - 104 });
+    const update = () => {
+      const navEl = document.querySelector("nav");
+      const navH = navEl ? navEl.getBoundingClientRect().height : 56;
+      const headerEl = document.querySelector("[data-command-header]");
+      const headerH = headerEl ? headerEl.getBoundingClientRect().height : 48;
+      setDimensions({ w: window.innerWidth, h: window.innerHeight - navH - headerH });
+    };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
@@ -283,7 +288,7 @@ export default function GlobeMap({ selected, onSelect }: Props) {
         height={dimensions.h}
       />
 
-      <div className="absolute top-4 right-4 bg-black/85 border border-ford-blue/40 p-4 z-10 font-mono-tech text-[10px] uppercase tracking-wider bracket max-w-[200px] backdrop-blur-sm">
+      <div className="absolute top-14 sm:top-4 right-4 bg-black/85 border border-ford-blue/40 p-3 sm:p-4 z-10 font-mono-tech text-[10px] uppercase tracking-wider bracket max-w-[200px] backdrop-blur-sm">
         <div className="text-ford-blue-light mb-3 text-[11px] font-bold">REDE FORD BRASIL</div>
         <div className="space-y-2.5 text-white/70">
           <div className="flex items-center gap-2.5">
@@ -308,8 +313,8 @@ export default function GlobeMap({ selected, onSelect }: Props) {
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center z-10">
-        <div className="bg-black/85 border border-ford-blue/30 px-6 py-3 font-mono-tech text-[10px] uppercase tracking-wider flex items-center gap-6 backdrop-blur-sm">
+      <div className="absolute bottom-4 left-2 right-2 sm:left-4 sm:right-4 flex justify-center z-10">
+        <div className="bg-black/85 border border-ford-blue/30 px-3 sm:px-6 py-2 sm:py-3 font-mono-tech text-[9px] sm:text-[10px] uppercase tracking-wider flex items-center gap-3 sm:gap-6 backdrop-blur-sm flex-wrap justify-center">
           <div>
             <span className="text-white/40">CLIENTES </span>
             <span className="text-ford-blue-light font-bold text-sm">{dealerships.reduce((s, d) => s + d.activeClients, 0).toLocaleString("pt-BR")}</span>

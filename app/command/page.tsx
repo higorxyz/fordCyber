@@ -118,7 +118,7 @@ export default function CommandPage() {
         onSelect={(id) => setSection(id as Section)}
       />
 
-      <div className="border-b border-ford-blue/40 bg-[#0a0a0a]/80 backdrop-blur-sm relative z-10">
+      <div data-command-header className="border-b border-ford-blue/40 bg-[#0a0a0a]/80 backdrop-blur-sm relative z-10">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 md:pl-48 flex min-h-12 flex-col gap-2 py-2 md:h-12 md:min-h-0 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center gap-4">
             <span className="font-mono-tech text-[10px] text-ford-blue-light tabular-nums">

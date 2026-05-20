@@ -206,7 +206,7 @@ export default function MotorPage() {
           </div>
         )}
 
-        <div className="mt-16">
+        <div className="mt-10 md:mt-16">
           <div className="text-[10px] uppercase tracking-[0.3em] text-white/50 text-center mb-6">
             O que o modelo classifica
           </div>
@@ -233,7 +233,7 @@ export default function MotorPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+        <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
           <Capability icon={<Cpu />} title="Telemetria em tempo real" />
           <Capability icon={<Target />} title="Predição de serviço" />
           <Capability icon={<Clock />} title="Janela ideal de contato" />
@@ -244,7 +244,7 @@ export default function MotorPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-16 max-w-3xl mx-auto text-center border-l-4 border-ford-blue-light pl-6 py-3"
+          className="mt-10 md:mt-16 max-w-3xl mx-auto text-center border-l-4 border-ford-blue-light pl-6 py-3"
         >
           <p className="text-base md:text-lg italic text-white/85 leading-relaxed">
             &quot;O Ford Vision não espera o cliente lembrar da revisão. Ele sabe

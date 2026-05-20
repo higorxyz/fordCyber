@@ -105,53 +105,83 @@ export default function SessionsPage() {
           ) : sessions.length === 0 ? (
             <div className="font-mono-tech text-xs text-white/60">Nenhuma sessão ativa.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px] text-white/70">
-                <thead className="text-[10px] uppercase tracking-[0.3em] text-white/50">
-                  <tr>
-                    <th className="py-3 px-2">Dispositivo</th>
-                    <th className="py-3 px-2">IP</th>
-                    <th className="py-3 px-2">Último acesso</th>
-                    <th className="py-3 px-2">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((session) => {
-                    const isCurrent = session.id === currentSessionId;
-                    return (
-                      <tr key={session.id} className="border-t border-white/10">
-                        <td className="py-3 px-2">
-                          <div className="font-mono-tech text-white/80">
-                            {session.deviceLabel || "Sessão web"}
-                            {isCurrent && (
-                              <span className="ml-2 text-[9px] text-ford-blue-light uppercase">
-                                atual
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[9px] text-white/40 break-all">
-                            {session.userAgent || "User-Agent indisponível"}
-                          </div>
-                        </td>
-                        <td className="py-3 px-2">{maskIpAddress(session.ipAddress)}</td>
-                        <td className="py-3 px-2">
-                          {new Date(session.lastSeenAt).toLocaleString("pt-BR")}
-                        </td>
-                        <td className="py-3 px-2">
-                          <button
-                            onClick={() => handleRevoke(session.id)}
-                            disabled={actionId === session.id}
-                            className="font-display text-[9px] uppercase tracking-[0.3em] text-white/70 hover:text-ford-red"
-                          >
-                            {actionId === session.id ? "Revogando..." : "Revogar"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left text-[11px] text-white/70">
+                  <thead className="text-[10px] uppercase tracking-[0.3em] text-white/50">
+                    <tr>
+                      <th className="py-3 px-2">Dispositivo</th>
+                      <th className="py-3 px-2">IP</th>
+                      <th className="py-3 px-2">Último acesso</th>
+                      <th className="py-3 px-2">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessions.map((session) => {
+                      const isCurrent = session.id === currentSessionId;
+                      return (
+                        <tr key={session.id} className="border-t border-white/10">
+                          <td className="py-3 px-2">
+                            <div className="font-mono-tech text-white/80">
+                              {session.deviceLabel || "Sessão web"}
+                              {isCurrent && (
+                                <span className="ml-2 text-[9px] text-ford-blue-light uppercase">atual</span>
+                              )}
+                            </div>
+                            <div className="text-[9px] text-white/40 break-all">
+                              {session.userAgent || "User-Agent indisponível"}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2">{maskIpAddress(session.ipAddress)}</td>
+                          <td className="py-3 px-2">{new Date(session.lastSeenAt).toLocaleString("pt-BR")}</td>
+                          <td className="py-3 px-2">
+                            <button
+                              onClick={() => handleRevoke(session.id)}
+                              disabled={actionId === session.id}
+                              className="font-display text-[9px] uppercase tracking-[0.3em] text-white/70 hover:text-ford-red"
+                            >
+                              {actionId === session.id ? "Revogando..." : "Revogar"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {/* Mobile cards */}
+              <div className="sm:hidden space-y-3">
+                {sessions.map((session) => {
+                  const isCurrent = session.id === currentSessionId;
+                  return (
+                    <div key={session.id} className="border border-white/10 rounded-sm p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-mono-tech text-xs text-white/80">
+                          {session.deviceLabel || "Sessão web"}
+                          {isCurrent && (
+                            <span className="ml-2 text-[9px] text-ford-blue-light uppercase">atual</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRevoke(session.id)}
+                          disabled={actionId === session.id}
+                          className="font-display text-[9px] uppercase tracking-[0.25em] text-white/60 hover:text-ford-red shrink-0"
+                        >
+                          {actionId === session.id ? "..." : "Revogar"}
+                        </button>
+                      </div>
+                      <div className="text-[9px] text-white/40 break-all">{session.userAgent || "User-Agent indisponível"}</div>
+                      <div className="flex items-center gap-3 text-[10px] text-white/50">
+                        <span>{maskIpAddress(session.ipAddress)}</span>
+                        <span className="text-white/20">·</span>
+                        <span>{new Date(session.lastSeenAt).toLocaleString("pt-BR")}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>

@@ -66,8 +66,8 @@ export default function StockControl() {
         </p>
       </div>
 
-      <div className="ford-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="ford-card overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-black/50 text-[10px] uppercase tracking-[0.2em] text-white/50">
             <tr>
               <th className="text-left p-3">Peça</th>

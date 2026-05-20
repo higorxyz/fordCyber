@@ -235,7 +235,7 @@ export default function MyFord({ firstName }: Props) {
                     />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono-tech text-[8px] text-white/30">{s.detail}</span>
+                    <span className="hidden sm:inline font-mono-tech text-[8px] text-white/30 max-w-[80px] truncate">{s.detail}</span>
                     <span className={`num-display text-[13px] w-10 text-right ${STATUS_COLOR[s.status]}`}>
                       {s.health}%
                     </span>

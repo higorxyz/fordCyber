@@ -58,8 +58,8 @@ export default function Performance() {
                   type="category"
                   dataKey="name"
                   stroke="#999"
-                  fontSize={11}
-                  width={100}
+                  fontSize={10}
+                  width={80}
                 />
                 <Tooltip
                   contentStyle={{
