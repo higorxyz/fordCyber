@@ -142,8 +142,6 @@ export const userRoleUpdateSchema = z.object({
   role: z.enum(["usuario", "analista", "admin"]),
 });
 
-const relaxedPasswordSchema = z.string().min(4).max(72);
-
 function emptyStringToUndefined(value: unknown) {
   if (typeof value !== "string") return value;
   return value.trim().length === 0 ? undefined : value;
@@ -168,7 +166,7 @@ export const adminUserCreateSchema = z
   .object({
     username: optionalUsernameSchema,
     email: optionalEmailSchema,
-    password: relaxedPasswordSchema,
+    password: strongPasswordSchema,
     name: optionalNameSchema,
     role: z.enum(["usuario", "analista", "admin"]).default("usuario"),
   })

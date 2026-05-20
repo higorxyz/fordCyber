@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         ip,
         details: { identifier: data.identifier },
       });
-      throw new ApiError(404, "user_not_found", "Usuario ou e-mail nao encontrado");
+      return jsonResponse(req, { ok: true }, 200);
     }
 
     await clearPasswordResetsForUser(user.id);

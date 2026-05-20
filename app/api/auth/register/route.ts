@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         ip,
         details: { username: data.username, reason: "username_taken" },
       });
-      throw new ApiError(409, "username_taken", "Username ja cadastrado");
+      throw new ApiError(409, "registration_conflict", "Nao foi possivel criar a conta");
     }
 
     const existingByEmail = await findUserByEmail(data.email);
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         ip,
         details: { email: data.email, reason: "email_taken" },
       });
-      throw new ApiError(409, "email_taken", "E-mail ja cadastrado");
+      throw new ApiError(409, "registration_conflict", "Nao foi possivel criar a conta");
     }
 
     const passwordHash = bcrypt.hashSync(data.password, 10);

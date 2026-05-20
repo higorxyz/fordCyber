@@ -78,6 +78,10 @@ if (isProd && databaseSsl && !databaseSslRejectUnauthorized) {
   );
 }
 
+if (isProd && seedDemoUsers) {
+  throw new Error("Invalid env SEED_DEMO_USERS: must be false in production");
+}
+
 if (
   isProd &&
   !seedDemoUsers &&

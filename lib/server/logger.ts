@@ -23,7 +23,7 @@ const MAX_STRING_LENGTH = 280;
 const REDACTED_VALUE = "[redacted]";
 const TRUNCATED_VALUE = "[truncated]";
 const SENSITIVE_KEY_PATTERN =
-  /(pass(word)?|token|secret|authorization|cookie|session|credential|api[-_]?key|email|phone|cpf|cnpj|vin|plate|license|username|customer(name|email|phone)?|notes?)/i;
+  /(pass(word)?|token|secret|authorization|cookie|session|credential|api[-_]?key|email|phone|cpf|cnpj|vin|plate|license|username|identifier|customer(name|email|phone)?|notes?)/i;
 
 let migrationPromise: Promise<void> | null = null;
 let migrationCompleted = false;

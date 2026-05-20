@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         });
         return errorResponse(req, 429, "account_locked", "Too many attempts", requestId);
       }
-      throw new ApiError(404, "user_not_found", "Usuario ou e-mail nao encontrado");
+      throw new ApiError(401, "invalid_credentials", "Credenciais invalidas");
     }
 
     if (!verifyPassword(user, data.password)) {
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         });
         return errorResponse(req, 429, "account_locked", "Too many attempts", requestId);
       }
-      throw new ApiError(401, "invalid_password", "Senha incorreta");
+      throw new ApiError(401, "invalid_credentials", "Credenciais invalidas");
     }
 
     await clearLoginGuard(identifier);

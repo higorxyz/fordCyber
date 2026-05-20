@@ -63,7 +63,9 @@ export function errorResponse(
 
 export function requireHttps(req: NextRequest) {
   if (config.allowInsecureHttp) return;
-  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  const proto = config.trustProxyHeaders
+    ? req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase()
+    : undefined;
   const requestProtocol = req.nextUrl.protocol.replace(":", "").toLowerCase();
   if ((proto && proto !== "https") || (!proto && requestProtocol !== "https")) {
     throw new ApiError(400, "https_required", "HTTPS required");

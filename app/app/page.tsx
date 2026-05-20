@@ -71,7 +71,7 @@ export default function ClientAppPage() {
       <Navbar />
       <main className="flex-1 min-h-0 relative z-10 md:flex md:items-center md:justify-center md:px-4 md:py-8">
         <div className="w-full h-full md:h-auto md:w-auto md:flex md:flex-col md:items-center md:gap-4">
-          <div className="w-full h-full flex flex-col bg-black md:phone-frame md:w-[400px] md:h-[820px]">
+          <div className="w-full h-full flex flex-col bg-black md:phone-frame md:w-[400px] md:h-[min(820px,calc(100dvh-120px))]">
             <div className="hidden md:flex items-center justify-between px-6 pt-3 pb-1 text-[11px] text-white/80">
               <span className="font-semibold">9:41</span>
               <div className="flex items-center gap-1">

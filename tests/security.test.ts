@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { z } from "zod";
 
-process.env.NODE_ENV = "test";
-process.env.JWT_SECRET = "x".repeat(32);
-process.env.DATA_ENCRYPTION_KEY = "y".repeat(32);
-process.env.PAYLOAD_SIGNING_SECRET = "z".repeat(32);
-process.env.CRON_SECRET = "c".repeat(24);
-process.env.APP_BASE_URL = "http://localhost:3001";
-process.env.ALLOWED_ORIGINS = "http://localhost:3001";
-process.env.TRUST_PROXY_HEADERS = "true";
+const env = process.env as Record<string, string | undefined>;
+
+env.NODE_ENV = "test";
+env.JWT_SECRET = "x".repeat(32);
+env.DATA_ENCRYPTION_KEY = "y".repeat(32);
+env.PAYLOAD_SIGNING_SECRET = "z".repeat(32);
+env.CRON_SECRET = "c".repeat(24);
+env.APP_BASE_URL = "http://localhost:3001";
+env.ALLOWED_ORIGINS = "http://localhost:3001";
+env.TRUST_PROXY_HEADERS = "true";
 
 test("CSRF rejects mismatched token", async () => {
   const { requireCsrf } = await import("../lib/server/csrf");
@@ -85,22 +87,28 @@ test("Body parser enforces UTF-8 byte limit", async () => {
   );
 });
 
-test("Admin user creation schema accepts one credential with 4-char password", async () => {
+test("Admin user creation schema enforces strong password requirements", async () => {
   const { adminUserCreateSchema } = await import("../lib/server/validators");
 
-  const withUsernameOnly = adminUserCreateSchema.safeParse({
+  const weakWithUsername = adminUserCreateSchema.safeParse({
     username: "new-operator",
     password: "1234",
     role: "usuario",
   });
-  const withEmailOnly = adminUserCreateSchema.safeParse({
+  const weakWithEmail = adminUserCreateSchema.safeParse({
     email: "operator@ford.local",
     password: "abcd",
     role: "analista",
   });
+  const strongWithUsername = adminUserCreateSchema.safeParse({
+    username: "new-operator",
+    password: "StrongPassw0rd!",
+    role: "usuario",
+  });
 
-  assert.equal(withUsernameOnly.success, true);
-  assert.equal(withEmailOnly.success, true);
+  assert.equal(weakWithUsername.success, false);
+  assert.equal(weakWithEmail.success, false);
+  assert.equal(strongWithUsername.success, true);
 });
 
 test("Regular registration remains strict for non-admin flows", async () => {

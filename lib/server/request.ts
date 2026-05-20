@@ -7,13 +7,16 @@ export function getClientIp(req: NextRequest) {
     const forwarded = req.headers.get("x-forwarded-for");
     const forwardedIp = parseForwardedFor(forwarded);
     if (forwardedIp) return forwardedIp;
+
+    const directHeaders = ["x-real-ip", "x-client-ip", "cf-connecting-ip"];
+    for (const header of directHeaders) {
+      const parsed = normalizeIpCandidate(req.headers.get(header));
+      if (parsed) return parsed;
+    }
   }
 
-  const directHeaders = ["x-real-ip", "x-client-ip", "cf-connecting-ip"];
-  for (const header of directHeaders) {
-    const parsed = normalizeIpCandidate(req.headers.get(header));
-    if (parsed) return parsed;
-  }
+  const runtimeIp = normalizeIpCandidate((req as unknown as { ip?: string | null }).ip);
+  if (runtimeIp) return runtimeIp;
 
   return undefined;
 }
