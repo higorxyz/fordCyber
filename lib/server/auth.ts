@@ -24,7 +24,9 @@ const issuer = "ford-vision-api";
 const audience = "ford-vision";
 
 export const ACCESS_COOKIE = "fv_access";
-export const REFRESH_COOKIE = "fv_refresh";
+export const REFRESH_COOKIE = "fv_refresh_scoped";
+export const LEGACY_REFRESH_COOKIE = "fv_refresh";
+export const REFRESH_COOKIE_PATH = "/api/auth/refresh";
 
 const roleOrder: Record<Role, number> = {
   usuario: 1,

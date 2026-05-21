@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import {
   ACCESS_COOKIE,
+  LEGACY_REFRESH_COOKIE,
   REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
   createSessionTokens,
   findUserByIdentifier,
   verifyPassword,
@@ -116,6 +118,13 @@ export async function POST(req: NextRequest) {
       secure: isProduction,
       sameSite: "strict",
       maxAge: config.refreshTokenTtlSec,
+      path: REFRESH_COOKIE_PATH,
+    });
+    response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 0,
       path: "/",
     });
 
@@ -130,7 +139,15 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err) {
     if (isApiError(err)) {
-      return errorResponse(req, err.status, err.code, err.safeMessage, requestId);
+      const response = errorResponse(req, err.status, err.code, err.safeMessage, requestId);
+      response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "strict",
+        maxAge: 0,
+        path: "/",
+      });
+      return response;
     }
     await logEvent({
       type: "auth_login_error",
@@ -140,6 +157,14 @@ export async function POST(req: NextRequest) {
         message: err instanceof Error ? err.message : "Unexpected auth error",
       },
     });
-    return errorResponse(req, 500, "server_error", "Request failed", requestId);
+    const response = errorResponse(req, 500, "server_error", "Request failed", requestId);
+    response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 0,
+      path: "/",
+    });
+    return response;
   }
 }

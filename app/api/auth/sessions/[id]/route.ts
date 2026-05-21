@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
-import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/server/auth";
+import {
+  ACCESS_COOKIE,
+  LEGACY_REFRESH_COOKIE,
+  REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
+} from "@/lib/server/auth";
 import { requireRole } from "@/lib/server/authorize";
 import { requireCsrf } from "@/lib/server/csrf";
 import { config, isProduction } from "@/lib/server/config";
@@ -57,6 +62,13 @@ export async function DELETE(req: NextRequest, { params }: Params) {
         path: "/",
       });
       response.cookies.set(REFRESH_COOKIE, "", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "strict",
+        maxAge: 0,
+        path: REFRESH_COOKIE_PATH,
+      });
+      response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
         httpOnly: true,
         secure: isProduction,
         sameSite: "strict",

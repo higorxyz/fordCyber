@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import {
   ACCESS_COOKIE,
+  LEGACY_REFRESH_COOKIE,
   REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
   revokeSessionById,
   verifyAccessToken,
 } from "@/lib/server/auth";
@@ -57,6 +59,13 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
     response.cookies.set(REFRESH_COOKIE, "", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 0,
+      path: REFRESH_COOKIE_PATH,
+    });
+    response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
       httpOnly: true,
       secure: isProduction,
       sameSite: "strict",

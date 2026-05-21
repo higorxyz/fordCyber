@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import {
   ACCESS_COOKIE,
+  LEGACY_REFRESH_COOKIE,
   REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
   findUserById,
   rotateSessionTokens,
   verifyRefreshToken,
@@ -38,7 +40,9 @@ export async function POST(req: NextRequest) {
       return errorResponse(req, 429, "rate_limited", "Too many requests", requestId);
     }
 
-    const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
+    const refreshToken =
+      req.cookies.get(REFRESH_COOKIE)?.value ??
+      req.cookies.get(LEGACY_REFRESH_COOKIE)?.value;
     if (!refreshToken) {
       throw new ApiError(401, "missing_refresh", "Session expired");
     }
@@ -65,6 +69,13 @@ export async function POST(req: NextRequest) {
       secure: isProduction,
       sameSite: "strict",
       maxAge: config.refreshTokenTtlSec,
+      path: REFRESH_COOKIE_PATH,
+    });
+    response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 0,
       path: "/",
     });
 

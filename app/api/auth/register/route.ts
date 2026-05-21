@@ -1,6 +1,12 @@
 import bcrypt from "bcryptjs";
 import type { NextRequest } from "next/server";
-import { ACCESS_COOKIE, REFRESH_COOKIE, createSessionTokens } from "@/lib/server/auth";
+import {
+  ACCESS_COOKIE,
+  LEGACY_REFRESH_COOKIE,
+  REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
+  createSessionTokens,
+} from "@/lib/server/auth";
 import { readJsonBody } from "@/lib/server/body";
 import { requireCsrf } from "@/lib/server/csrf";
 import { config, isProduction } from "@/lib/server/config";
@@ -96,6 +102,13 @@ export async function POST(req: NextRequest) {
       secure: isProduction,
       sameSite: "strict",
       maxAge: config.refreshTokenTtlSec,
+      path: REFRESH_COOKIE_PATH,
+    });
+    response.cookies.set(LEGACY_REFRESH_COOKIE, "", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "strict",
+      maxAge: 0,
       path: "/",
     });
 

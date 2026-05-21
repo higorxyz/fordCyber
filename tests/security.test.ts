@@ -61,6 +61,17 @@ test("RBAC allows higher roles", async () => {
   assert.equal(roleAllows("usuario", "analista"), false);
 });
 
+test("Refresh cookie is scoped and legacy cookie name is deprecated", async () => {
+  const {
+    REFRESH_COOKIE,
+    LEGACY_REFRESH_COOKIE,
+    REFRESH_COOKIE_PATH,
+  } = await import("../lib/server/auth");
+
+  assert.notEqual(REFRESH_COOKIE, LEGACY_REFRESH_COOKIE);
+  assert.equal(REFRESH_COOKIE_PATH, "/api/auth/refresh");
+});
+
 test("Password reset token is single-use", async () => {
   const { createPasswordReset, consumePasswordReset } = await import(
     "../lib/server/passwordReset"
