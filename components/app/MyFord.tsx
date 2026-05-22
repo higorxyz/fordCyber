@@ -4,7 +4,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gauge, MapPin, Droplets, Disc3, Shield, Cog, ChevronLeft, ChevronRight } from "lucide-react";
-import { client, Vehicle } from "@/data/client";
+import type { LucideIcon } from "lucide-react";
+import { client } from "@/data/client";
 
 const CarViewer3D = dynamic(() => import("./CarViewer3D"), {
   ssr: false,
@@ -32,7 +33,7 @@ const STATUS_BG = {
   bad: "bg-ford-red",
 };
 
-const SYS_ICON: Record<string, any> = {
+const SYS_ICON: Record<string, LucideIcon> = {
   "Óleo do Motor": Droplets,
   "Freios": Disc3,
   "Pneus": Shield,

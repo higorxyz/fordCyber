@@ -8,8 +8,19 @@ import { logEvent } from "@/lib/server/logger";
 import { getSecurityPolicy } from "@/lib/server/policy";
 import { getClientIp } from "@/lib/server/request";
 import { rateLimit } from "@/lib/server/rateLimit";
-import { applyMaintenanceRetention, applyRetention } from "@/lib/server/retention";
-import { getLeadStore, getMaintenanceStore, saveLeadStore, saveMaintenanceStore } from "@/lib/server/store";
+import {
+  applyMaintenanceRetention,
+  applyRetention,
+  applyVehicleRetention,
+} from "@/lib/server/retention";
+import {
+  getLeadStore,
+  getMaintenanceStore,
+  getVehicleStore,
+  saveLeadStore,
+  saveMaintenanceStore,
+  saveVehicleStore,
+} from "@/lib/server/store";
 
 export const runtime = "nodejs";
 
@@ -79,6 +90,11 @@ export async function POST(req: NextRequest) {
     maintenanceStore.items = maintenanceResult.kept;
     await saveMaintenanceStore(maintenanceStore);
 
+    const vehicleStore = await getVehicleStore();
+    const vehicleResult = applyVehicleRetention(vehicleStore.items, daysParam);
+    vehicleStore.items = vehicleResult.kept;
+    await saveVehicleStore(vehicleStore);
+
     await logEvent({
       type: "retention_applied",
       actorId,
@@ -92,6 +108,10 @@ export async function POST(req: NextRequest) {
         maintenance: {
           anonymized: maintenanceResult.anonymized,
           removed: maintenanceResult.removed,
+        },
+        vehicles: {
+          anonymized: vehicleResult.anonymized,
+          removed: vehicleResult.removed,
         },
         days: daysParam,
         trigger: isCron ? "cron" : "manual",
@@ -109,6 +129,10 @@ export async function POST(req: NextRequest) {
         maintenance: {
           anonymized: maintenanceResult.anonymized,
           removed: maintenanceResult.removed,
+        },
+        vehicles: {
+          anonymized: vehicleResult.anonymized,
+          removed: vehicleResult.removed,
         },
       },
       200

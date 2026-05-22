@@ -336,6 +336,7 @@ export async function isSessionActive(userId: string, sessionId: string) {
 }
 
 function stripHash(session: StoredSession): UserSession {
-  const { refreshTokenHash: _ignored, ...rest } = session;
+  const { refreshTokenHash, ...rest } = session;
+  void refreshTokenHash;
   return rest;
 }

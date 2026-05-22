@@ -21,9 +21,14 @@ interface Props {
   onSelect: (d: Dealership) => void;
 }
 
+type DefaultIconPrototype = {
+  _getIconUrl?: unknown;
+};
+
 export default function VisionMap({ selected, onSelect }: Props) {
   useEffect(() => {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    const defaultIconPrototype = L.Icon.Default.prototype as DefaultIconPrototype;
+    delete defaultIconPrototype._getIconUrl;
   }, []);
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -134,18 +135,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(true);
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [particles, setParticles] = useState<
-    { left: string; delay: string; duration: string }[]
-  >([]);
-
-  useEffect(() => {
-    const arr = Array.from({ length: 25 }).map(() => ({
+  const [particles] = useState<{ left: string; delay: string; duration: string }[]>(
+    () =>
+      Array.from({ length: 25 }).map(() => ({
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 8}s`,
       duration: `${8 + Math.random() * 8}s`,
-    }));
-    setParticles(arr);
-  }, []);
+    }))
+  );
 
   useEffect(() => {
     prefetchCsrf();
@@ -263,9 +260,12 @@ export default function LoginPage() {
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="relative z-10 flex flex-col items-center"
           >
-            <img
+            <Image
               src="/ford-logo-real.svg"
               alt="Ford"
+              width={280}
+              height={160}
+              priority
               className="w-[210px] sm:w-[250px] md:w-[280px] h-auto select-none"
               style={{
                 filter: "drop-shadow(0 0 24px rgba(0, 104, 214, 0.45))",

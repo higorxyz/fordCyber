@@ -1,9 +1,11 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/server/authorize";
+import { config } from "@/lib/server/config";
 import { isApiError } from "@/lib/server/errors";
 import { errorResponse, getRequestId, handlePreflight, jsonResponse, requireAllowedOrigin, requireHttps } from "@/lib/server/http";
 import { logEvent } from "@/lib/server/logger";
 import { getClientIp } from "@/lib/server/request";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { listSessionsForUser } from "@/lib/server/sessions";
 
 export const runtime = "nodejs";
@@ -20,6 +22,15 @@ export async function GET(req: NextRequest) {
     requireHttps(req);
     requireAllowedOrigin(req);
     const session = await requireRole(req, "usuario");
+    const limiter = await rateLimit(
+      `auth:sessions:${session.userId}:${ip ?? "unknown"}`,
+      config.rateLimits.api.limit,
+      config.rateLimits.api.windowMs
+    );
+    if (!limiter.allowed) {
+      await logEvent({ type: "session_list_rate_limited", requestId, ip });
+      return errorResponse(req, 429, "rate_limited", "Too many requests", requestId);
+    }
     const items = await listSessionsForUser(session.userId);
 
     await logEvent({

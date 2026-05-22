@@ -56,11 +56,13 @@ function requireSecret(name: string, fallback: string, minLength: number) {
   return value;
 }
 
-const seedDemoUsers = parseBoolean(process.env.SEED_DEMO_USERS, !isProd);
+const requestedSeedDemoUsers = parseBoolean(process.env.SEED_DEMO_USERS, !isProd);
+const seedDemoUsers = isProd ? false : requestedSeedDemoUsers;
 const bootstrapAdminUsername = parseOptionalEnv("BOOTSTRAP_ADMIN_USERNAME");
 const bootstrapAdminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD ?? "";
 const bootstrapAdminName = parseOptionalEnv("BOOTSTRAP_ADMIN_NAME") || "Administrador";
 const appBaseUrl = parseOptionalEnv("APP_BASE_URL") || (isProd ? "" : "http://localhost:3001");
+const databaseUrl = process.env.DATABASE_URL?.trim() ?? "";
 const databaseSsl = parseBoolean(process.env.DATABASE_SSL, true);
 const databaseSslRejectUnauthorized = parseBoolean(
   process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
@@ -78,17 +80,18 @@ if (isProd && databaseSsl && !databaseSslRejectUnauthorized) {
   );
 }
 
-if (isProd && seedDemoUsers) {
-  throw new Error("Invalid env SEED_DEMO_USERS: must be false in production");
+if (isProd && requestedSeedDemoUsers) {
+  console.warn("Ignoring SEED_DEMO_USERS=true in production and forcing false");
 }
 
 if (
   isProd &&
   !seedDemoUsers &&
+  !databaseUrl &&
   (!bootstrapAdminUsername || bootstrapAdminPassword.trim().length < 12)
 ) {
   throw new Error(
-    "Missing bootstrap admin credentials: set BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD (min 12 chars)"
+    "Missing bootstrap admin credentials: set BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD (min 12 chars) when running without DATABASE_URL"
   );
 }
 
@@ -116,7 +119,7 @@ export const config = {
     process.env.EXTERNAL_SERVICE_TIMEOUT_MS,
     8_000
   ),
-  databaseUrl: process.env.DATABASE_URL?.trim() ?? "",
+  databaseUrl,
   databaseSsl,
   databaseSslRejectUnauthorized,
   databaseSslCa,

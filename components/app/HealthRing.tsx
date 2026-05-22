@@ -17,7 +17,6 @@ export default function HealthRing({ systems, size = 220 }: Props) {
   const cx = size / 2;
   const cy = size / 2;
   const ringWidth = 10;
-  const gap = 3;
 
   const overall = Math.round(
     systems.reduce((acc, s) => acc + s.health, 0) / systems.length

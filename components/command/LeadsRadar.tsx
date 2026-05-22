@@ -11,9 +11,13 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { leads, Lead, StockStatus } from "@/data/leads";
 
-const STOCK_LABEL: Record<StockStatus, { icon: any; color: string; label: string }> = {
+const STOCK_LABEL: Record<
+  StockStatus,
+  { icon: LucideIcon; color: string; label: string }
+> = {
   ok: { icon: CheckCircle2, color: "text-green-400", label: "Disponível" },
   partial: { icon: AlertTriangle, color: "text-yellow-400", label: "Parcial" },
   out: { icon: XCircle, color: "text-ford-red", label: "Indisponível" },

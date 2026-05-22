@@ -30,7 +30,6 @@ export default function SessionsPage() {
   useEffect(() => {
     if (!authChecked) return;
     let active = true;
-    setLoading(true);
     fetchSessions()
       .then((data) => {
         if (!active) return;

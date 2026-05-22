@@ -1,5 +1,5 @@
 import { hashString } from "./crypto";
-import { Lead, MaintenanceEvent } from "./models";
+import { Lead, MaintenanceEvent, Vehicle } from "./models";
 
 export function anonymizeLead(lead: Lead) {
   if (lead.customerEmail.startsWith("anon+")) {
@@ -56,6 +56,49 @@ export function anonymizeMaintenanceEvent(event: MaintenanceEvent) {
     vehicleVin: `ANONVIN-${vinHash}`,
     notes: event.notes ? "[redacted]" : undefined,
   };
+}
+
+export function anonymizeVehicle(vehicle: Vehicle) {
+  if (vehicle.vin.startsWith("ANONVIN-")) {
+    return vehicle;
+  }
+  const vinHash = hashString(`${vehicle.id}:${vehicle.vin}`).slice(0, 12).toUpperCase();
+  return {
+    ...vehicle,
+    vin: `ANONVIN-${vinHash}`,
+  };
+}
+
+export function applyVehicleRetention(vehicles: Vehicle[], retentionDays: number) {
+  const now = Date.now();
+  const retentionMs = retentionDays * 24 * 60 * 60 * 1000;
+  let anonymized = 0;
+  let removed = 0;
+
+  const kept: Vehicle[] = [];
+  for (const vehicle of vehicles) {
+    const createdAt = Date.parse(vehicle.createdAt);
+    if (!Number.isFinite(createdAt)) {
+      kept.push(vehicle);
+      continue;
+    }
+    const ageMs = now - createdAt;
+    if (ageMs > retentionMs * 2) {
+      removed += 1;
+      continue;
+    }
+    if (ageMs > retentionMs) {
+      const maybeAnonymized = anonymizeVehicle(vehicle);
+      if (maybeAnonymized !== vehicle) {
+        anonymized += 1;
+      }
+      kept.push(maybeAnonymized);
+      continue;
+    }
+    kept.push(vehicle);
+  }
+
+  return { kept, anonymized, removed };
 }
 
 export function applyMaintenanceRetention(events: MaintenanceEvent[], retentionDays: number) {

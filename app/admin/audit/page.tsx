@@ -63,7 +63,6 @@ export default function AdminAuditPage() {
   useEffect(() => {
     if (!authChecked) return;
     let active = true;
-    setLoading(true);
     Promise.all([fetchAuditEvents(normalizedFilters), fetchMetrics(24)])
       .then(([items, metrics]) => {
         if (!active) return;

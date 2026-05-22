@@ -42,9 +42,14 @@ interface Props {
   onSelect: (d: Dealership | null) => void;
 }
 
+type HtmlMarker = {
+  lat: number;
+  lng: number;
+  dealer: Dealership;
+};
+
 export default function GlobeMap({ selected, onSelect }: Props) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
-  const animRef = useRef<number>(0);
   const frameRef = useRef<number>(0);
   const pausedRef = useRef(false);
   const [dimensions, setDimensions] = useState({ w: 1200, h: 700 });
@@ -75,18 +80,18 @@ export default function GlobeMap({ selected, onSelect }: Props) {
     []
   );
 
-  const htmlMarkers = useMemo(
+  const htmlMarkers = useMemo<HtmlMarker[]>(
     () => dealerships.map((d) => ({ lat: d.lat, lng: d.lng, dealer: d })),
     []
   );
 
   const handleMarkerClick = useCallback(
-    (d: any) => {
-      if (!d.dealer) return;
-      onSelect(d.dealer);
+    (marker: HtmlMarker) => {
+      if (!marker.dealer) return;
+      onSelect(marker.dealer);
       pausedRef.current = true;
       globeRef.current?.pointOfView(
-        { lat: d.dealer.lat, lng: d.dealer.lng, altitude: 1.0 },
+        { lat: marker.dealer.lat, lng: marker.dealer.lng, altitude: 1.0 },
         800
       );
       setTimeout(() => {
@@ -166,13 +171,13 @@ export default function GlobeMap({ selected, onSelect }: Props) {
   }, []);
 
   const createMarkerElement = useCallback(
-    (d: any) => {
+    (marker: HtmlMarker) => {
       const wrapper = document.createElement("div");
       wrapper.style.position = "relative";
       wrapper.style.width = "0";
       wrapper.style.height = "0";
 
-      const dealer = d.dealer as Dealership | undefined;
+      const dealer = marker.dealer;
       if (!dealer) return wrapper;
 
       const color = LEVEL_COLORS[dealer.level];
@@ -276,11 +281,12 @@ export default function GlobeMap({ selected, onSelect }: Props) {
         htmlLat="lat"
         htmlLng="lng"
         htmlAltitude={0.015}
-        htmlElement={(d: any) => {
-          const el = createMarkerElement(d);
+        htmlElement={(data) => {
+          const marker = data as HtmlMarker;
+          const el = createMarkerElement(marker);
           el.style.pointerEvents = "auto";
           el.style.cursor = "pointer";
-          el.onclick = () => handleMarkerClick(d);
+          el.onclick = () => handleMarkerClick(marker);
           return el;
         }}
         animateIn={true}

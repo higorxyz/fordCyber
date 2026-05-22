@@ -5,6 +5,7 @@ import { errorResponse, getRequestId, handlePreflight, jsonResponse, requireAllo
 import { getAuditEvents, logEvent } from "@/lib/server/logger";
 import { getSecurityPolicy } from "@/lib/server/policy";
 import { getClientIp } from "@/lib/server/request";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { auditQuerySchema } from "@/lib/server/validators";
 
 export const runtime = "nodejs";
@@ -21,6 +22,17 @@ export async function GET(req: NextRequest) {
     requireHttps(req);
     requireAllowedOrigin(req);
     const session = await requireRole(req, "admin");
+    const limiter = await rateLimit(`audit:get:${ip ?? "unknown"}`, 60, 60_000);
+    if (!limiter.allowed) {
+      await logEvent({
+        type: "audit_rate_limited",
+        requestId,
+        ip,
+        actorId: session.userId,
+        actorRole: session.role,
+      });
+      return errorResponse(req, 429, "rate_limited", "Too many requests", requestId);
+    }
     const limitParam = Number(req.nextUrl.searchParams.get("limit") ?? "100");
     const query = {
       limit: limitParam,

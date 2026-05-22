@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, Bell, Award, Clock, Sparkles, Wifi, Signal, BatteryFull } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import GradientCanvas from "@/components/shared/GradientCanvas";
 import Onboarding from "@/components/app/Onboarding";
@@ -16,7 +17,7 @@ import { getSessionProfile } from "@/lib/auth";
 
 type Tab = "onboarding" | "myford" | "alerts" | "points" | "timeline" | "moments";
 
-const TABS: { id: Tab; label: string; icon: any }[] = [
+const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: "myford", label: "Meu Ford", icon: Car },
   { id: "alerts", label: "Alertas", icon: Bell },
   { id: "points", label: "Pontos", icon: Award },
