@@ -39,13 +39,21 @@ test("CORS allowlist matches origin", async () => {
   } as unknown as NextRequest;
   assert.doesNotThrow(() => requireAllowedOrigin(machineRequest));
 
-  const browserLikeMissingOrigin = {
+  const sameOriginMissingOrigin = {
     headers: {
       get: (name: string) =>
         name.toLowerCase() === "sec-fetch-site" ? "same-origin" : null,
     },
   } as unknown as NextRequest;
-  assert.throws(() => requireAllowedOrigin(browserLikeMissingOrigin));
+  assert.doesNotThrow(() => requireAllowedOrigin(sameOriginMissingOrigin));
+
+  const crossSiteMissingOrigin = {
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "sec-fetch-site" ? "cross-site" : null,
+    },
+  } as unknown as NextRequest;
+  assert.throws(() => requireAllowedOrigin(crossSiteMissingOrigin));
 });
 
 test("Rate limit blocks after threshold", async () => {

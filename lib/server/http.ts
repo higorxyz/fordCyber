@@ -86,8 +86,9 @@ export function requireAllowedOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
   if (!origin) {
     const secFetchSite = req.headers.get("sec-fetch-site")?.toLowerCase();
-    // Allow non-browser/internal requests without Origin, but reject browser-like fetches missing Origin.
-    if (secFetchSite && secFetchSite !== "none") {
+    // Browsers may omit Origin on same-origin GET navigation/fetch.
+    // Reject only explicit cross-site requests that arrive without Origin.
+    if (secFetchSite === "cross-site") {
       throw new ApiError(403, "origin_required", "Origin required");
     }
     return;
