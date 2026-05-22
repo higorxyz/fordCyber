@@ -8,7 +8,7 @@ export function getRequestId(req: NextRequest) {
 }
 
 export function isAllowedOrigin(origin: string | null) {
-  if (!origin) return true;
+  if (!origin) return false;
   return config.allowedOrigins.includes(origin);
 }
 
@@ -84,7 +84,15 @@ export function requireHttps(req: NextRequest) {
 
 export function requireAllowedOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
-  if (origin && !isAllowedOrigin(origin)) {
+  if (!origin) {
+    const secFetchSite = req.headers.get("sec-fetch-site")?.toLowerCase();
+    // Allow non-browser/internal requests without Origin, but reject browser-like fetches missing Origin.
+    if (secFetchSite && secFetchSite !== "none") {
+      throw new ApiError(403, "origin_required", "Origin required");
+    }
+    return;
+  }
+  if (!isAllowedOrigin(origin)) {
     throw new ApiError(403, "origin_not_allowed", "Origin not allowed");
   }
 }

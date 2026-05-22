@@ -17,6 +17,12 @@ function parseBoolean(value, fallback) {
   return fallback;
 }
 
+function parseOptionalEnv(name) {
+  const value = process.env[name];
+  if (!value) return "";
+  return value.trim();
+}
+
 function getMigrationFiles() {
   if (!fs.existsSync(MIGRATIONS_DIR)) return [];
   return fs
@@ -73,8 +79,25 @@ async function run() {
     throw new Error("DATABASE_URL is required to run migrations");
   }
 
-  const ssl = parseBoolean(process.env.DATABASE_SSL, true)
-    ? { rejectUnauthorized: false }
+  const databaseSsl = parseBoolean(process.env.DATABASE_SSL, true);
+  const databaseSslRejectUnauthorized = parseBoolean(
+    process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
+    true
+  );
+  const databaseSslCa = parseOptionalEnv("DATABASE_SSL_CA").replace(/\\n/g, "\n");
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction && databaseSsl && !databaseSslRejectUnauthorized) {
+    throw new Error(
+      "Invalid env DATABASE_SSL_REJECT_UNAUTHORIZED: must be true in production"
+    );
+  }
+
+  const ssl = databaseSsl
+    ? {
+        rejectUnauthorized: databaseSslRejectUnauthorized,
+        ...(databaseSslCa ? { ca: databaseSslCa } : {}),
+      }
     : false;
 
   const files = getMigrationFiles();

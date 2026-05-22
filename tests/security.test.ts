@@ -27,9 +27,25 @@ test("CSRF rejects mismatched token", async () => {
 });
 
 test("CORS allowlist matches origin", async () => {
-  const { isAllowedOrigin } = await import("../lib/server/http");
+  const { isAllowedOrigin, requireAllowedOrigin } = await import("../lib/server/http");
   assert.equal(isAllowedOrigin("http://localhost:3001"), true);
   assert.equal(isAllowedOrigin("https://evil.test"), false);
+  assert.equal(isAllowedOrigin(null), false);
+
+  const machineRequest = {
+    headers: {
+      get: () => null,
+    },
+  } as unknown as NextRequest;
+  assert.doesNotThrow(() => requireAllowedOrigin(machineRequest));
+
+  const browserLikeMissingOrigin = {
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "sec-fetch-site" ? "same-origin" : null,
+    },
+  } as unknown as NextRequest;
+  assert.throws(() => requireAllowedOrigin(browserLikeMissingOrigin));
 });
 
 test("Rate limit blocks after threshold", async () => {
