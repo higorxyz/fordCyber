@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { config, isProduction } from "./config";
 
-let transport: nodemailer.Transporter | null = null;
+let transport: Transporter | null = null;
 
 function buildTransport() {
   if (!config.smtp.host) return null;

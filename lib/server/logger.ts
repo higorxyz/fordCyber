@@ -6,6 +6,7 @@ import { loadStore, purgeStore, saveStore, secureDeleteFile } from "./secureStor
 
 type LogEventInput = {
   type: string;
+  severity?: "info" | "alert" | "error";
   actorId?: string;
   actorRole?: Role;
   requestId: string;
@@ -31,7 +32,7 @@ let writeQueue: Promise<void> = Promise.resolve();
 
 export async function logEvent(input: LogEventInput) {
   const event = buildAuditEvent(input);
-  emitStructuredConsole("info", event);
+  emitStructuredConsole(input.severity ?? inferSeverity(event.type), event);
 
   try {
     await ensureLegacyAuditMigration();
@@ -330,14 +331,23 @@ function parseLegacyLine(line: string): AuditEvent | null {
   };
 }
 
-function emitStructuredConsole(level: "info" | "error", payload: Record<string, unknown>) {
+function inferSeverity(type: string): "info" | "alert" | "error" {
+  if (type.includes("error")) return "error";
+  if (type.includes("rate_limited") || type.includes("locked")) return "alert";
+  return "info";
+}
+
+function emitStructuredConsole(
+  level: "info" | "alert" | "error",
+  payload: Record<string, unknown>
+) {
   const body = {
     level,
     timestamp: new Date().toISOString(),
     ...payload,
   };
   const line = JSON.stringify(body);
-  if (level === "error") {
+  if (level === "error" || level === "alert") {
     console.error(line);
     return;
   }

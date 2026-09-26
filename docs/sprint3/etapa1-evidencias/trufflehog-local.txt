@@ -1,0 +1,17 @@
+FordCyber - evidencia local de secret scanning
+Data da execução: 2026-09-23
+Comando tentado:
+  trufflehog git file://$PWD --json --no-update
+
+Resultado real:
+  trufflehog CLI not found no ambiente PowerShell utilizado para a entrega.
+  A tentativa de instalação pelo Chocolatey falhou porque o terminal não era
+  elevado e o pacote não conseguiu obter o lock em C:\ProgramData\chocolatey.
+
+Conferência manual complementar:
+  O arquivo .env e os arquivos locais de data/secure estão no .gitignore. Os
+  valores de desenvolvimento presentes em lib/server/config.ts são fallbacks
+  explícitos para ambiente não produtivo, não credenciais do repositório. A
+  verificação definitiva do histórico fica automatizada no workflow: o job
+  baixa o binário oficial do TruffleHog, executa contra o histórico Git e
+  publica o relatório como artifact.

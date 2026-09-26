@@ -18,9 +18,9 @@
     "jose": "5.9.6",
     "leaflet": "1.9.4",
     "lucide-react": "0.408.0",
-    "nanoid": "5.1.11",
-    "next": "16.2.6",
-    "nodemailer": "8.0.7",
+    "nanoid": "5.1.16",
+    "next": "^16.3.6",
+    "nodemailer": "^10.0.10",
     "pg": "^8.20.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -40,13 +40,13 @@
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.2.6",
-    "postcss": "8.5.15",
+    "eslint-config-next": "16.3.6",
+    "postcss": "8.5.28",
     "tailwindcss": "3.4.6",
     "tsx": "^4.19.2",
     "typescript": "5.5.3"
   },
   "overrides": {
-    "postcss": "8.5.15"
+    "postcss": "8.5.28"
   }
 }

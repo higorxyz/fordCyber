@@ -1,0 +1,93 @@
+name: DevSecOps
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sast:
+    name: SAST - Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        continue-on-error: true
+        with:
+          config: p/owasp-top-ten p/typescript
+          generateSarif: true
+
+      - name: Install Semgrep CLI for JSON report
+        run: python -m pip install semgrep
+
+      - name: Save Semgrep report
+        if: always()
+        shell: bash
+        run: |
+          semgrep scan --config p/owasp-top-ten --config p/typescript --json --output semgrep-report.json . || true
+          test -f semgrep-report.json || printf '{"results":[],"errors":[{"message":"Semgrep execution failed"}]}' > semgrep-report.json
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: |
+            semgrep-report.json
+            semgrep.sarif
+          if-no-files-found: warn
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+  secret-scanning:
+    name: Secret Scanning - TruffleHog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install TruffleHog
+        shell: bash
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run TruffleHog action
+        uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --json
+
+      - name: Run TruffleHog against repository history
+        continue-on-error: true
+        run: trufflehog git file://. --json > trufflehog-report.json
+
+      - name: Save TruffleHog report
+        if: always()
+        shell: bash
+        run: |
+          test -f trufflehog-report.json || printf '{"status":"scan_failed"}' > trufflehog-report.json
+
+      - name: Upload TruffleHog report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trufflehog-report
+          path: trufflehog-report.json
+          if-no-files-found: warn

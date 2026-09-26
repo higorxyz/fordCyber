@@ -1,0 +1,7 @@
+flowchart LR
+    C[Commit] --> S[Semgrep\nSAST: OWASP Top Ten + TypeScript]
+    S --> T[TruffleHog\nSecret Scanning: Git history]
+    T --> B[Build\nnpm ci + npm run build]
+    B --> D[Deploy]
+    classDef security fill:#f7c948,stroke:#8a5a00,stroke-width:2px,color:#1f2937;
+    class S,T security;
