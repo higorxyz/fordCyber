@@ -1,0 +1,24 @@
+Evidência: claims de JWT de acesso
+Comando real: geração com signAccessToken de lib/server/auth.ts e decodificação
+local apenas das duas primeiras partes do token. A assinatura e o segredo não
+foram impressos.
+
+Saída real:
+{
+  "header": {
+    "alg": "HS256"
+  },
+  "payload": {
+    "role": "usuario",
+    "username": "cliente",
+    "sid": "evidence-session",
+    "iat": 1790472410,
+    "iss": "ford-vision-api",
+    "aud": "ford-vision",
+    "sub": "evidence-user",
+    "exp": 1790473310
+  }
+}
+
+A presença de iss, aud e exp confirma os controles documentados em
+lib/server/auth.ts. O valor exp é um timestamp Unix futuro relativo à execução.

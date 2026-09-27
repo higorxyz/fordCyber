@@ -1,0 +1,12 @@
+Evidência: criptografia autenticada em dados em repouso
+Comando real:
+  node --test --import tsx --test-name-pattern "Encrypted payload roundtrip" tests/security.test.ts
+
+Saída real:
+✔ Encrypted payload roundtrip works and tampering is rejected (45.6135ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0

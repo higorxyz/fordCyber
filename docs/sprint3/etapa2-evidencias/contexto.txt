@@ -1,0 +1,14 @@
+Ford Vision - evidencias reais da Etapa 2
+Data local: 2026-09-26T22:29:18-03:00
+
+Servidor usado:
+  NODE_ENV=development
+  ALLOW_INSECURE_HTTP=true
+  ALLOWED_ORIGINS=http://localhost:3001
+  TRUST_PROXY_HEADERS=true
+  Usuários demo habilitados somente durante a execução local.
+
+Os segredos usados para a execução eram temporários e não aparecem nos arquivos
+de evidência. As respostas abaixo foram obtidas contra http://localhost:3001,
+com PowerShell Invoke-WebRequest, e o teste criptográfico foi executado com
+node --test --import tsx.

@@ -1,0 +1,16 @@
+Evidência: bloqueio de autenticação por abuso
+Comando: 11 POST /api/auth/login com credenciais inválidas, usando o mesmo IP
+e token CSRF válido. O limite configurado é 10 requisições por minuto.
+
+Saída real:
+attempt=1 status=401 body={"error":{"code":"invalid_credentials","message":"Credenciais invalidas","requestId":"3a61839c-eabb-490a-87ea-231ba4c80cf2"}}
+attempt=2 status=401 body={"error":{"code":"invalid_credentials","message":"Credenciais invalidas","requestId":"22cf5633-3188-4bea-aa16-bba3e9f9b88f"}}
+attempt=3 status=401 body={"error":{"code":"invalid_credentials","message":"Credenciais invalidas","requestId":"4ad4630a-b47a-4f0f-b144-2b291619de10"}}
+attempt=4 status=401 body={"error":{"code":"invalid_credentials","message":"Credenciais invalidas","requestId":"8beeb954-614e-4cfc-bc89-ef7a010c1402"}}
+attempt=5 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"467ed373-a44e-443b-ac42-b74049e34a6a"}}
+attempt=6 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"f9c6d1d9-eb08-4ded-81cd-9583144210a8"}}
+attempt=7 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"1263b1cc-737f-425d-8562-c1972e23e03d"}}
+attempt=8 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"37d96b0d-8856-44e2-83a6-732331d60279"}}
+attempt=9 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"d63195c1-812c-4607-adba-9d7ed5dd493e"}}
+attempt=10 status=429 body={"error":{"code":"account_locked","message":"Too many attempts","requestId":"92b4f75c-b8da-4c4e-880f-589895686e85"}}
+attempt=11 status=429 body={"error":{"code":"rate_limited","message":"Too many requests","requestId":"eb243b06-6595-49f8-b054-1a0b94918477"}}

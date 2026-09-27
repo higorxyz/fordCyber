@@ -8,7 +8,7 @@ const key = crypto
 
 export function encryptJson(value: unknown) {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv, { authTagLength: 16 });
   const plain = Buffer.from(JSON.stringify(value), "utf8");
   const encrypted = Buffer.concat([cipher.update(plain), cipher.final()]);
   const tag = cipher.getAuthTag();
@@ -23,7 +23,7 @@ export function decryptJson<T>(payload: string): T {
   const iv = Buffer.from(ivB64, "base64");
   const data = Buffer.from(dataB64, "base64");
   const tag = Buffer.from(tagB64, "base64");
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv, { authTagLength: 16 });
   decipher.setAuthTag(tag);
   const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
   return JSON.parse(decrypted.toString("utf8")) as T;

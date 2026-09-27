@@ -1,0 +1,11 @@
+Evidência: acesso administrativo negado por RBAC
+Fluxo real:
+  1. POST /api/auth/login com identifier=cliente e senha=cliente.
+  2. GET /api/admin/metrics usando a sessão retornada.
+
+Saída real:
+login_status=200 body={"role":"usuario","username":"cliente"}
+admin_status=403 body={"error":{"code":"forbidden","message":"Forbidden","requestId":"4b11053e-039f-46e5-801d-3c2bca468de9"}}
+
+O usuário autenticado tem papel usuario e a rota exige admin em
+app/api/admin/metrics/route.ts.

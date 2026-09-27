@@ -26,13 +26,15 @@ flowchart LR
 		class S,T security;
 ```
 
-Na máquina usada para preparar a entrega, os comandos `semgrep` e `trufflehog` não estavam instalados. Isso foi registrado sem transformar a ausência da ferramenta em um falso resultado positivo. Os arquivos `docs/sprint3/etapa1-evidencias/semgrep-local.txt` e `docs/sprint3/etapa1-evidencias/trufflehog-local.txt` guardam os comandos tentados, a saída real e a revisão manual complementar. A análise local verificou que as rotas passam por schemas Zod, que os acessos SQL usam parâmetros e que não há uso identificado de execução de processos ou `dangerouslySetInnerHTML`.
+Na máquina usada para preparar a entrega, os comandos `semgrep` e `trufflehog` não estavam instalados. Isso foi registrado sem transformar a ausência da ferramenta em um falso resultado positivo. Os arquivos `docs/sprint3/etapa1-evidencias/semgrep-local.txt` e `docs/sprint3/etapa1-evidencias/trufflehog-local.txt` guardam os comandos tentados, a saída real e a revisão manual complementar. A análise verificou que as rotas passam por schemas Zod, que os acessos SQL usam parâmetros e que não há uso identificado de execução de processos ou `dangerouslySetInnerHTML`. Os relatórios reais versionados estão em `docs/sprint3/etapa1-evidencias/semgrep-report.json` e `trufflehog-report.json`.
 
 ### Pesquisa orientada: SCA e segurança de containers
 
 SCA (Software Composition Analysis) verifica as dependências do projeto e compara versões com bancos de vulnerabilidades. Neste caso, Dependabot poderia abrir pull requests a partir do `package.json` e `package-lock.json`, enquanto Snyk poderia entrar como um job depois de `npm ci`, falhando o pipeline quando uma vulnerabilidade acima do nível definido fosse encontrada. Após a atualização de Next.js, Nodemailer, nanoid, PostCSS e dependências transitivas, `npm audit` terminou com zero vulnerabilidades nesta instalação. O `npm audit` continua sendo um controle complementar, não substituto da análise de contexto feita em uma ferramenta de SCA.
 
 Container Security entraria depois do build da imagem Docker e antes do deploy. Uma ferramenta como Trivy verificaria pacotes do sistema na imagem `node:20-bookworm-slim`, dependências Node e configurações perigosas, como usuário root ou portas desnecessárias. Não foi implementada nesta Sprint porque o pipeline atual ainda não publica uma imagem em registry. O Dockerfile hardened preparado na Etapa 2 deixa esse próximo passo bem definido.
+
+As actions de terceiros continuam referenciadas por tags (`@v1`, `@v4` e `@main`) por simplicidade de manutenção no trabalho acadêmico. Isso deixa uma melhoria de supply chain em aberto: em um ambiente de produção eu fixaria cada action em commit SHA e validaria atualizações por pull request. O instalador do TruffleHog também usa o script oficial remoto; o trade-off fica registrado porque a action oficial continua sendo executada no mesmo job.
 
 ## Etapa 2: Segurança em código e infraestrutura
 
@@ -64,6 +66,8 @@ export const userRoleUpdateSchema = z.object({
 
 `lib/server/auth.ts` usa bcrypt para a senha e JWT HS256 com issuer, audience, subject, identificador da sessão e expiração. O access token dura 15 minutos. O refresh token é rotacionado e seu hash é conferido na sessão persistida. Os cookies são HTTP-only, SameSite strict e o refresh cookie fica limitado ao caminho `/api/auth/refresh`.
 
+As evidências executadas desta etapa estão em `docs/sprint3/etapa2-evidencias/`: `rate-limit-429.txt` mostra uma resposta HTTP 429 real na autenticação, `rbac-403.txt` mostra um usuário `usuario` impedido de acessar uma rota administrativa, `crypto-roundtrip.txt` registra o teste de cifra/decifra, e `jwt-claims.txt` contém somente header e claims decodificados, sem a chave de assinatura.
+
 ### RBAC
 
 `lib/server/authorize.ts` centraliza o controle com `requireRole`. Primeiro verifica o cookie, depois a assinatura JWT, a existência da sessão ativa e, por fim, a hierarquia `usuario < analista < admin`. As rotas fazem a checagem no servidor. Por exemplo, `GET /api/leads` exige `admin`, enquanto criação de lead e veículo exige `analista`. Rotas de usuários, políticas, retenção e auditoria exigem `admin`. A alteração de papel também impede que o administrador altere o próprio papel ou remova o último administrador, em `app/api/admin/users/[id]/role/route.ts`.
@@ -77,6 +81,8 @@ Commits relevantes do histórico são `7056c4e` (`feat(security): complete cyber
 ## Etapa 3: Logs, alertas e resposta a incidentes
 
 `lib/server/logger.ts` monta eventos estruturados com `id`, `type`, `requestId`, `actorId`, `actorRole`, `ip`, `createdAt` e `details`. Os detalhes passam por limite de profundidade, quantidade de chaves, tamanho de strings e redaction de nomes como `password`, `token`, `secret`, `cookie`, `session`, `email`, `phone` e `vin`. O evento é emitido em JSON no console e também persistido no store de auditoria cifrado, com no máximo 10.000 eventos.
+
+O escopo de métricas desta etapa é deliberadamente web/API. Não há aplicativo mobile, dispositivo IoT ou modelo de ML neste projeto; portanto não há telemetria de bateria, sensores, firmware, inferência ou drift para medir. O que faz sentido aqui é acompanhar tentativas de login, bloqueios, abuso de endpoint, sessões, auditoria e alterações administrativas. Mobile, IoT e ML permanecem N/A por decisão de arquitetura, não por falta de implementação acidental.
 
 Um exemplo real de linha produzida pelo logger, com valores ilustrativos apenas nos campos variáveis, é:
 

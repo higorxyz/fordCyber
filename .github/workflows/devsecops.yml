@@ -84,7 +84,13 @@ jobs:
 
       - name: Run TruffleHog against repository history
         continue-on-error: true
-        run: trufflehog git file://. --json > trufflehog-report.json
+        run: |
+          trufflehog git file://. --json > trufflehog-report.raw.json || true
+          if [ -s trufflehog-report.raw.json ]; then
+            jq -s . trufflehog-report.raw.json > trufflehog-report.json
+          else
+            printf '[]\n' > trufflehog-report.json
+          fi
 
       - name: Save TruffleHog report
         if: always()

@@ -1,5 +1,5 @@
-FordCyber - evidencia local de secret scanning
-Data da execução: 2026-09-23
+FordCyber - evidencia de secret scanning
+Data da atualização: 2026-09-26
 Comando tentado:
   trufflehog git file://$PWD --json --no-update
 
@@ -24,9 +24,8 @@ Conferência manual complementar:
   valores de desenvolvimento presentes em lib/server/config.ts são fallbacks
   explícitos para ambiente não produtivo, não credenciais do repositório.
 
-Trecho relevante do relatório:
-  O arquivo trufflehog-report.json baixado do artifact está vazio (0 bytes),
-  confirmando que a varredura contra o histórico completo do Git não encontrou
-  nenhuma credencial ou segredo verificável no repositório. Único ponto de
-  atenção: o comando devolve um arquivo vazio em vez de um JSON válido (ex.: "[]")
-  quando não há achados; melhoria futura seria normalizar essa saída no workflow.
+Trecho relevante do relatório atualizado:
+  []
+
+  O workflow agora normaliza a saída vazia para um JSON válido (`[]`) quando a
+  varredura contra o histórico completo não encontra credenciais verificáveis.
