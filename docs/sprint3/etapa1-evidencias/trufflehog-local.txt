@@ -12,15 +12,21 @@ Resultado da execução real no GitHub Actions:
   Artifact: trufflehog-report (id 10919356190, 160 bytes, não expirado)
 
   O job executou a action oficial trufflesecurity/trufflehog@main com base no
-  commit anterior/evento e head em github.sha, além do scan do histórico completo.
-  O download direto do ZIP do artifact requer autenticação GitHub não disponível
-  neste terminal; os metadados acima foram consultados na API pública.
+  commit anterior/evento e head em github.sha, além do scan do histórico completo
+  (trufflehog git file://. --json). O artifact foi baixado manualmente pela
+  interface do GitHub.
+
+  Print da execução (dois jobs verdes): ./actions-run-success.png
+  Relatório completo baixado do artifact: ./trufflehog-report.json
 
 Conferência manual complementar:
   O arquivo .env e os arquivos locais de data/secure estão no .gitignore. Os
   valores de desenvolvimento presentes em lib/server/config.ts são fallbacks
-  explícitos para ambiente não produtivo, não credenciais do repositório. A
+  explícitos para ambiente não produtivo, não credenciais do repositório.
+
 Trecho relevante do relatório:
-  O artifact possui 160 bytes e o job terminou success, sem detecção bloqueadora
-  registrada na saída do workflow. O JSON completo fica no artifact trufflehog-report
-  da run indicada.
+  O arquivo trufflehog-report.json baixado do artifact está vazio (0 bytes),
+  confirmando que a varredura contra o histórico completo do Git não encontrou
+  nenhuma credencial ou segredo verificável no repositório. Único ponto de
+  atenção: o comando devolve um arquivo vazio em vez de um JSON válido (ex.: "[]")
+  quando não há achados; melhoria futura seria normalizar essa saída no workflow.

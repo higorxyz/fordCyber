@@ -13,15 +13,29 @@ Resultado da execução real no GitHub Actions:
 
   O job executou a action oficial semgrep/semgrep-action@v1, depois gerou
   semgrep-report.json e semgrep.sarif pela CLI. O relatório foi publicado com
-  sucesso. O download direto do ZIP do artifact requer autenticação GitHub não
-  disponível neste terminal; os metadados acima foram consultados na API pública.
+  sucesso e o artifact foi baixado manualmente pela interface do GitHub.
+
+  Print da execução (dois jobs verdes): ./actions-run-success.png
+  Relatório completo baixado do artifact: ./semgrep-report.json
 
 Conferência manual complementar:
   Foram revisados os pontos de entrada em app/api, a construção de queries SQL em
   lib/server e o uso de dangerouslySetInnerHTML/execução de processos no código.
   As rotas usam readJsonBody com schemas Zod e os acessos ao PostgreSQL usam
-  parâmetros. Nenhum resultado automático foi declarado como achado sem a CLI.
+  parâmetros.
 
-Trecho relevante do relatório:
-  A execução terminou sem falha e não produziu achados bloqueadores no resumo
-  do job. O JSON completo fica no artifact semgrep-report da run indicada.
+Achados reais do relatório (8 no total, nenhum bloqueou o build por causa do
+continue-on-error do step, ficam registrados aqui como próxima melhoria):
+  [ERROR]   lib/server/crypto.ts:26 - javascript.node-crypto.security.gcm-no-tag-length
+            createDecipheriv em modo GCM sem authTagLength explícito. O código já
+            usa cipher.getAuthTag()/decipher.setAuthTag() com o tamanho padrão de
+            16 bytes (seguro), mas a regra recomenda declarar o tamanho de forma
+            explícita como defesa em profundidade.
+  [ERROR]   .github/workflows/devsecops.yml:72 - yaml.github-actions.security.gha-curl-pipe-shell
+            Padrão "curl | sh" usado para instalar o TruffleHog no workflow. Risco
+            teórico se o script remoto for comprometido; melhoria futura seria
+            fixar o hash do script ou usar a action oficial de instalação.
+  [WARNING] .github/workflows/devsecops.yml (linhas 23, 28, 47, 66, 77, 97) -
+            yaml.github-actions.security.github-actions-mutable-action-tag
+            Actions de terceiros referenciadas por tag/branch móvel (@v4, @main)
+            em vez de commit SHA fixo. Melhoria futura de supply chain.
