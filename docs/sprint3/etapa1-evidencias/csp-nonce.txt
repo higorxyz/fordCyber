@@ -1,0 +1,12 @@
+CSP runtime evidence
+Date: 2026-09-27T00:56:53.9939914-03:00
+Command: curl -sSI http://localhost:3001/
+content-security-policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: https://*.tile.openstreetmap.org; media-src 'self' https://cdn.pixabay.com; connect-src 'self'; script-src 'self' 'nonce-NzZlMmMzNTEtOGJkZi00OGI0LWI1NDYtZjM2MTIzNThlNGU5' 'strict-dynamic'
+HTML checks:
+script tags: 11
+nonce attributes: 13
+script-src contains unsafe-inline: False
+script-src contains nonce: True
+script-src contains strict-dynamic: True
+Browser pages checked: / and /app on npm start port 3002
+Browser console: no CSP violation messages; no Refused to execute inline script, Refused to execute script, or Refused to apply inline style messages.

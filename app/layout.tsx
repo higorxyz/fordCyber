@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "FORD VISION — Retenção Inteligente",
@@ -14,14 +17,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const nonce = (await headers()).get("x-nonce") ?? "";
+
   return (
     <html lang="pt-BR">
-      <body className="bg-black text-white min-h-screen scanline">{children}</body>
+      <body className="bg-black text-white min-h-screen scanline">
+        <meta name="csp-nonce" content={nonce} />
+        {children}
+      </body>
     </html>
   );
 }

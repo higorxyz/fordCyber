@@ -1,0 +1,7 @@
+CSP runtime evidence
+Date: 2026-09-27
+Server: npm start, production build, http://localhost:3002
+Pages checked in browser: /
+Console result: no CSP console errors were present after the fresh navigation.
+The browser did report non-CSP RSC requests with HTTP 400/aborted navigation while prefetching routes; no "Refused to execute inline script", "Refused to execute script" or "Refused to apply inline style" message was reported.
+Screenshot: ./csp-console-clean.png

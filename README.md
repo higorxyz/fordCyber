@@ -34,7 +34,7 @@ SCA (Software Composition Analysis) verifica as dependências do projeto e compa
 
 Container Security entraria depois do build da imagem Docker e antes do deploy. Uma ferramenta como Trivy verificaria pacotes do sistema na imagem `node:20-bookworm-slim`, dependências Node e configurações perigosas, como usuário root ou portas desnecessárias. Não foi implementada nesta Sprint porque o pipeline atual ainda não publica uma imagem em registry. O Dockerfile hardened preparado na Etapa 2 deixa esse próximo passo bem definido.
 
-As actions de terceiros continuam referenciadas por tags (`@v1`, `@v4` e `@main`) por simplicidade de manutenção no trabalho acadêmico. Isso deixa uma melhoria de supply chain em aberto: em um ambiente de produção eu fixaria cada action em commit SHA e validaria atualizações por pull request. O instalador do TruffleHog também usa o script oficial remoto; o trade-off fica registrado porque a action oficial continua sendo executada no mesmo job.
+As actions de terceiros do workflow estão fixadas por commit SHA, com o comentário da versão ao lado. Os SHAs foram conferidos com `git ls-remote` em 2026-09-27. O instalador do TruffleHog baixa o script oficial para arquivo, verifica que ele não está vazio e começa com `#!` antes de executar. Ainda existe o risco residual de confiar no conteúdo remoto sem checksum publicado pelo projeto; por isso a action oficial fixada por SHA também permanece no job.
 
 ## Etapa 2: Segurança em código e infraestrutura
 
@@ -75,6 +75,8 @@ As evidências executadas desta etapa estão em `docs/sprint3/etapa2-evidencias/
 ### Dockerfile hardened
 
 O `Dockerfile` da raiz usa três estágios: dependências, build e runtime. A imagem final usa `node:20-bookworm-slim`, não carrega ferramentas de build, executa o bundle standalone do Next e roda com o usuário não-root `nextjs` (UID 1001). O `output: "standalone"` correspondente foi habilitado em `next.config.js`. Segredos, conexão PostgreSQL e configuração de produção continuam sendo fornecidos por variáveis de ambiente, não pela imagem.
+
+Os headers fixos continuam em `next.config.js`. O `Content-Security-Policy` foi movido para `middleware.ts`, que gera um nonce por requisição, propaga `x-nonce` para o Next e adiciona `strict-dynamic`. O `app/layout.tsx` lê esse nonce e força renderização dinâmica; não há uso de `next/script` ou `<script>` manual no projeto. O `script-src` não usa `unsafe-inline`. A diretiva `style-src` ainda mantém `unsafe-inline` por causa dos estilos inline gerados pela interface, que é um risco residual separado. A evidência de header e navegador está em `docs/sprint3/etapa1-evidencias/csp-nonce.txt` e `csp-console-clean.png`.
 
 Commits relevantes do histórico são `7056c4e` (`feat(security): complete cybersecurity hardening and quality cleanup`), `2bc0331` (`chore(security): apply npm audit dependency fixes`), `a7960ca` (`chore(security): tighten tls migration and origin validation`), `0f72f5c` (`fix(auth): prevent logout on same-origin requests without origin`) e `f9d16f7` (`chore: align .env.example keys with production`).
 
@@ -118,10 +120,10 @@ Foi implementada uma regra simples no próprio logger: tipos que terminam em `_r
 | A02 Cryptographic Failures | Mitigado | AES-256-GCM em `lib/server/crypto.ts`, `secureStore.ts`, bcrypt em `lib/server/auth.ts`, cookies HTTP-only e TLS exigido em `lib/server/http.ts`. |
 | A03 Injection | Mitigado | Zod em `lib/server/validators.ts` e `body.ts`; consultas PostgreSQL parametrizadas; não há execução de shell identificada na revisão manual. |
 | A04 Insecure Design | Parcialmente mitigado | Limites, sessão, CSRF, assinatura de payload e auditoria existem. Não há MFA nem SIEM central, então o risco residual permanece. |
-| A05 Security Misconfiguration | Parcialmente mitigado | Headers de segurança em `next.config.js`, secrets obrigatórios em produção e `.env` no `.gitignore`. CSP ainda usa `unsafe-inline` para compatibilidade. |
+| A05 Security Misconfiguration | Mitigado | Headers estáticos em `next.config.js` e CSP dinâmica com nonce e `strict-dynamic` em `middleware.ts`; `script-src` não usa `unsafe-inline`. Evidência: `docs/sprint3/etapa1-evidencias/csp-nonce.txt` e `csp-console-clean.png`. |
 | A06 Vulnerable Components | Parcialmente mitigado | `package-lock.json` e commit `2bc0331` registram correções de dependências. SCA contínuo com Dependabot/Snyk ainda não foi habilitado. |
 | A07 Identification and Authentication Failures | Mitigado | JWT com issuer/audience/expiração, bcrypt, loginGuard, rate limit, rotação e revogação em `auth.ts` e `sessions.ts`. MFA não existe. |
-| A08 Software and Data Integrity Failures | Mitigado | Assinatura de payload em `lib/server/signature.ts`, CSRF, revisão por pull request com workflow e armazenamento autenticado por GCM. |
+| A08 Software and Data Integrity Failures | Mitigado | Assinatura de payload em `lib/server/signature.ts`, CSRF, revisão por pull request com workflow, actions fixadas por SHA e armazenamento autenticado por GCM. |
 | A09 Security Logging and Monitoring Failures | Parcialmente mitigado | Logger estruturado, auditoria cifrada, alertas locais e `GET /api/audit`. Falta integração com monitoramento externo. |
 | A10 SSRF | N/A no fluxo atual / risco residual | Não há endpoint público de URL arbitrária. A integração em `externalService.ts` usa URL de configuração; ainda deve manter allowlist e timeout em produção. |
 
@@ -162,7 +164,7 @@ Foi escolhido o **ASVS Level 1**, adequado ao escopo acadêmico e ao risco princ
 
 ### Plano de mitigação dos pontos restantes
 
-O próximo incremento deve adicionar Dependabot ou Snyk ao workflow e Trivy ao estágio de imagem. Em seguida, os eventos `alert` precisam ser enviados para um serviço central com retenção e notificação, porque o logger atual é confiável para auditoria local, mas não substitui monitoramento distribuído. Também recomendo remover gradualmente `unsafe-inline` da CSP com nonces, adicionar MFA para administradores, formalizar versionamento das rotas e criar testes de integração para verificar cada combinação de papel e endpoint.
+O próximo incremento pode adicionar Snyk ao workflow e Trivy ao estágio de imagem. Em seguida, os eventos `alert` precisam ser enviados para um serviço central com retenção e notificação, porque o logger atual é confiável para auditoria local, mas não substitui monitoramento distribuído. Também recomendo avaliar a remoção de `unsafe-inline` de `style-src`, adicionar MFA para administradores, formalizar versionamento das rotas e criar testes de integração para verificar cada combinação de papel e endpoint.
 
 ## Execução local
 

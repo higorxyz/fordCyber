@@ -20,12 +20,12 @@ jobs:
       BOOTSTRAP_ADMIN_PASSWORD: CiAdminPassw0rd!
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Run Semgrep
-        uses: semgrep/semgrep-action@v1
+        uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
         continue-on-error: true
         with:
           config: p/owasp-top-ten p/typescript
@@ -44,7 +44,7 @@ jobs:
 
       - name: Upload Semgrep report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: semgrep-report
           path: |
@@ -63,18 +63,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Install TruffleHog
         shell: bash
         run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "$HOME/.local/bin"
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh -o trufflehog-install.sh
+          test -s trufflehog-install.sh
+          test "$(head -c 2 trufflehog-install.sh)" = '#!'
+          sh trufflehog-install.sh -b "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run TruffleHog action
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@88524578ce32e1a8521c29dd38af9d9200ff92cc # main in 2026-09-27
         continue-on-error: true
         with:
           path: ./
@@ -100,7 +103,7 @@ jobs:
 
       - name: Upload TruffleHog report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: trufflehog-report
           path: trufflehog-report.json
