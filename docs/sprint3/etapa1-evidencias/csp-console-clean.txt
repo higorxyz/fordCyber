@@ -1,7 +1,16 @@
 CSP runtime evidence
 Date: 2026-09-27
-Server: npm start, production build, http://localhost:3002
-Pages checked in browser: /
-Console result: no CSP console errors were present after the fresh navigation.
-The browser did report non-CSP RSC requests with HTTP 400/aborted navigation while prefetching routes; no "Refused to execute inline script", "Refused to execute script" or "Refused to apply inline style" message was reported.
-Screenshot: ./csp-console-clean.png
+Server: npm start, production build, http://localhost:3001
+Page checked in browser: /
+
+Real Playwright console output:
+	Total messages: 2 (Errors: 2, Warnings: 0)
+	[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/api/auth/csrf:0
+	[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3001/favicon.ico:0
+
+CSP-specific result:
+	No "Refused to execute inline script", "Refused to execute script" or
+	"Refused to apply inline style" message was emitted. The two errors above are
+	application/resource responses, not CSP violations. No screenshot is claimed
+	here because the previous PNG was a solid-color capture without a visible
+	DevTools console and was removed.
