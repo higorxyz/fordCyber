@@ -49,6 +49,10 @@ trufflehog-report.json
 *-report.json
 *.sarif
 
+# Sprint 3 evidence reports
+!docs/sprint3/etapa1-evidencias/*.json
+!docs/sprint3/etapa1-evidencias/*.sarif
+
 # personal notes, instructions, checklists and scratchpads
 *passos*
 *proximo*
