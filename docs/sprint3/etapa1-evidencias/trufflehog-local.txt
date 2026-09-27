@@ -4,12 +4,12 @@ Comando tentado:
   trufflehog git file://$PWD --json --no-update
 
 Resultado da execução real no GitHub Actions:
-  Run: 36281882184
-  Commit: fa51b258e46cb86ec0d60baffb4f21631a50303a
-  Job: Secret Scanning - TruffleHog (108515159725)
+  Run: 36285948110
+  Commit: ce9782f5026213298f73257fa94eb58958dd2991
+  Job: Secret Scanning - TruffleHog (108526633875)
   Status: completed / success
-  URL: https://github.com/higorxyz/fordCyber/actions/runs/36281882184
-  Artifact: trufflehog-report (id 10919356190, 160 bytes, não expirado)
+  URL: https://github.com/higorxyz/fordCyber/actions/runs/36285948110
+  Artifact: trufflehog-report (id 10919733846, 163 bytes, não expirado)
 
   O job executou a action oficial trufflesecurity/trufflehog@main com base no
   commit anterior/evento e head em github.sha, além do scan do histórico completo

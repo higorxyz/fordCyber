@@ -10,6 +10,14 @@ Resultado local real após a correção:
   Resultado: scan completed successfully; 7 findings, 1 error de execução de
   regras; o relatório completo está em ./semgrep-report.json.
 
+Execução CI final com o mesmo código:
+  Run: 36285948110
+  Commit: ce9782f5026213298f73257fa94eb58958dd2991
+  Job: SAST - Semgrep (108526634049)
+  Status: completed / success
+  URL: https://github.com/higorxyz/fordCyber/actions/runs/36285948110
+  Artifact: semgrep-report (id 10919634079, 112384 bytes, não expirado)
+
 Conferência manual complementar:
   Foram revisados os pontos de entrada em app/api, a construção de queries SQL em
   lib/server e o uso de dangerouslySetInnerHTML/execução de processos no código.
