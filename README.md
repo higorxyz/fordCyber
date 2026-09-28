@@ -26,7 +26,7 @@ flowchart LR
 		class S,T security;
 ```
 
-Na máquina usada para preparar a entrega, os comandos `semgrep` e `trufflehog` não estavam instalados. Isso foi registrado sem transformar a ausência da ferramenta em um falso resultado positivo. Os arquivos `docs/sprint3/etapa1-evidencias/semgrep-local.txt` e `docs/sprint3/etapa1-evidencias/trufflehog-local.txt` guardam os comandos tentados, a saída real e a revisão manual complementar. A análise verificou que as rotas passam por schemas Zod, que os acessos SQL usam parâmetros e que não há uso identificado de execução de processos ou `dangerouslySetInnerHTML`. Os relatórios reais versionados estão em `docs/sprint3/etapa1-evidencias/semgrep-report.json` e `trufflehog-report.json`.
+Inicialmente os comandos `semgrep` e `trufflehog` não estavam instalados na máquina usada para preparar a entrega. Isso foi registrado sem transformar a ausência da ferramenta em um falso resultado positivo. Depois, o Semgrep foi instalado em um ambiente virtual Python e executado localmente, e o TruffleHog foi validado pela execução real no CI. Os arquivos `docs/sprint3/etapa1-evidencias/semgrep-local.txt` e `docs/sprint3/etapa1-evidencias/trufflehog-local.txt` guardam os comandos usados, a saída real e a revisão manual complementar. A análise verificou que as rotas passam por schemas Zod, que os acessos SQL usam parâmetros e que não há uso identificado de execução de processos ou `dangerouslySetInnerHTML`. Os relatórios reais versionados estão em `docs/sprint3/etapa1-evidencias/semgrep-report.json` e `trufflehog-report.json`; esse relatório específico corresponde à run `36285948110`, anterior ao commit que fixou as actions por SHA (`96677b2`), por isso ainda lista os achados de tag móvel. A confirmação de que o pipeline segue verde depois do pin, já sem essas actions móveis, está em `docs/sprint3/etapa1-evidencias/actions-pinned-run.txt` (run `36292960903`).
 
 ### Pesquisa orientada: SCA e segurança de containers
 
@@ -114,33 +114,33 @@ Foi implementada uma regra simples no próprio logger: tipos que terminam em `_r
 
 ### OWASP Top 10 (2021)
 
-| Risco | Situação no projeto | Mitigação ou evidência |
-|---|---|---|
-| A01 Broken Access Control | Mitigado | RBAC server-side em `lib/server/authorize.ts`; rotas administrativas usam `requireRole`; `app/api/admin/users/[id]/role/route.ts` protege o último admin. |
-| A02 Cryptographic Failures | Mitigado | AES-256-GCM em `lib/server/crypto.ts`, `secureStore.ts`, bcrypt em `lib/server/auth.ts`, cookies HTTP-only e TLS exigido em `lib/server/http.ts`. |
-| A03 Injection | Mitigado | Zod em `lib/server/validators.ts` e `body.ts`; consultas PostgreSQL parametrizadas; não há execução de shell identificada na revisão manual. |
-| A04 Insecure Design | Parcialmente mitigado | Limites, sessão, CSRF, assinatura de payload e auditoria existem. Não há MFA nem SIEM central, então o risco residual permanece. |
-| A05 Security Misconfiguration | Mitigado | Headers estáticos em `next.config.js` e CSP dinâmica com nonce e `strict-dynamic` em `middleware.ts`; `script-src` não usa `unsafe-inline`. Evidência: `docs/sprint3/etapa1-evidencias/csp-nonce.txt` e `csp-console-clean.txt`. |
-| A06 Vulnerable Components | Parcialmente mitigado | `package-lock.json` e commit `2bc0331` registram correções de dependências. SCA contínuo com Dependabot/Snyk ainda não foi habilitado. |
-| A07 Identification and Authentication Failures | Mitigado | JWT com issuer/audience/expiração, bcrypt, loginGuard, rate limit, rotação e revogação em `auth.ts` e `sessions.ts`. MFA não existe. |
-| A08 Software and Data Integrity Failures | Mitigado | Assinatura de payload em `lib/server/signature.ts`, CSRF, revisão por pull request com workflow, actions fixadas por SHA e armazenamento autenticado por GCM. |
-| A09 Security Logging and Monitoring Failures | Parcialmente mitigado | Logger estruturado, auditoria cifrada, alertas locais e `GET /api/audit`. Falta integração com monitoramento externo. |
-| A10 SSRF | N/A no fluxo atual / risco residual | Não há endpoint público de URL arbitrária. A integração em `externalService.ts` usa URL de configuração; ainda deve manter allowlist e timeout em produção. |
+| Risco | O que existe no projeto |
+|---|---|
+| A01 Broken Access Control | RBAC server-side em `lib/server/authorize.ts`; rotas administrativas usam `requireRole`; `app/api/admin/users/[id]/role/route.ts` protege o último admin. |
+| A02 Cryptographic Failures | AES-256-GCM em `lib/server/crypto.ts`, `secureStore.ts`, bcrypt em `lib/server/auth.ts`, cookies HTTP-only e TLS exigido em `lib/server/http.ts`. |
+| A03 Injection | Zod em `lib/server/validators.ts` e `body.ts`; consultas PostgreSQL parametrizadas; não há execução de shell identificada na revisão manual. |
+| A04 Insecure Design | Limites, sessão, CSRF, assinatura de payload e auditoria existem. Não há MFA nem SIEM central. |
+| A05 Security Misconfiguration | Headers estáticos em `next.config.js` e CSP dinâmica com nonce e `strict-dynamic` em `middleware.ts`; `script-src` não usa `unsafe-inline`. Evidência: `docs/sprint3/etapa1-evidencias/csp-nonce.txt` e `csp-console-clean.txt`. |
+| A06 Vulnerable Components | `package-lock.json` e commit `2bc0331` registram correções de dependências. Dependabot está habilitado (`.github/dependabot.yml`, atualização semanal com cooldown de 7 dias) e já abriu pull requests reais de bump de dependência; PRs de major version que quebraram o build (zod 4, tailwind 4, framer-motion 13) não foram mesclados. Snyk ainda não foi habilitado. |
+| A07 Identification and Authentication Failures | JWT com issuer/audience/expiração, bcrypt, loginGuard, rate limit, rotação e revogação em `auth.ts` e `sessions.ts`. MFA não existe. |
+| A08 Software and Data Integrity Failures | Assinatura de payload em `lib/server/signature.ts`, CSRF, revisão por pull request com workflow, actions fixadas por SHA e armazenamento autenticado por GCM. |
+| A09 Security Logging and Monitoring Failures | Logger estruturado, auditoria cifrada, alertas locais e `GET /api/audit`. Não há integração com monitoramento externo. |
+| A10 SSRF | Não há endpoint público de URL arbitrária nesta aplicação. A integração em `externalService.ts` usa URL de configuração; allowlist e timeout em produção seguem como ponto de atenção. |
 
 ### OWASP API Security Top 10
 
-| Risco | Situação | Mitigação ou evidência nas rotas `app/api/*` |
-|---|---|---|
-| API1 BOLA | Mitigado | Sessões e IDs são conferidos no servidor; sessões individuais exigem o usuário dono em `app/api/auth/sessions/[id]/route.ts`. |
-| API2 Broken Authentication | Mitigado | `auth/login`, `refresh`, cookies protegidos, JWT verificado e refresh token rotacionado. |
-| API3 Broken Object Property Level Authorization | Mitigado | Schemas Zod limitam campos; respostas administrativas selecionam explicitamente campos públicos em `app/api/admin/users`. |
-| API4 Unrestricted Resource Consumption | Mitigado | `rateLimit`, limite de body de 32 KB, limite de profundidade/nós e paginação máxima. |
-| API5 Broken Function Level Authorization | Mitigado | `requireRole` é chamado nas rotas de leads, veículos, manutenção, auditoria e administração. |
-| API6 Unrestricted Access to Sensitive Business Flows | Parcialmente mitigado | CSRF, origem, rate limit e assinatura protegem mutações. Não existe detecção distribuída de fraude entre instâncias. |
-| API7 Server Side Request Forgery | N/A no endpoint público | Não há rota que aceite URL do cliente; chamadas externas partem de configuração do servidor e têm timeout. |
-| API8 Security Misconfiguration | Parcialmente mitigado | CORS/origem, HTTPS, headers e erros seguros estão em `http.ts`; CSP possui `unsafe-inline` como ponto residual. |
-| API9 Improper Inventory Management | Mitigado | Rotas são organizadas no App Router e o workflow testa build. Fica como manutenção futura versionar formalmente a API. |
-| API10 Unsafe Consumption of APIs | Parcialmente mitigado | `externalService.ts` usa timeout e eventos assinados; validação de contrato e observabilidade do fornecedor ainda podem ser ampliadas. |
+| Risco | O que existe no projeto nas rotas `app/api/*` |
+|---|---|
+| API1 BOLA | Sessões e IDs são conferidos no servidor; sessões individuais exigem o usuário dono em `app/api/auth/sessions/[id]/route.ts`. |
+| API2 Broken Authentication | `auth/login`, `refresh`, cookies protegidos, JWT verificado e refresh token rotacionado. |
+| API3 Broken Object Property Level Authorization | Schemas Zod limitam campos; respostas administrativas selecionam explicitamente campos públicos em `app/api/admin/users`. |
+| API4 Unrestricted Resource Consumption | `rateLimit`, limite de body de 32 KB, limite de profundidade/nós e paginação máxima. |
+| API5 Broken Function Level Authorization | `requireRole` é chamado nas rotas de leads, veículos, manutenção, auditoria e administração. |
+| API6 Unrestricted Access to Sensitive Business Flows | CSRF, origem, rate limit e assinatura protegem mutações. Não existe detecção distribuída de fraude entre instâncias. |
+| API7 Server Side Request Forgery | Não há rota que aceite URL do cliente nesta aplicação; chamadas externas partem de configuração do servidor e têm timeout. |
+| API8 Security Misconfiguration | CORS/origem, HTTPS, headers e erros seguros estão em `http.ts`; CSP possui `unsafe-inline` em `style-src` como ponto residual. |
+| API9 Improper Inventory Management | Rotas são organizadas no App Router e o workflow testa build. Versionar formalmente a API fica como manutenção futura. |
+| API10 Unsafe Consumption of APIs | `externalService.ts` usa timeout e eventos assinados; validação de contrato e observabilidade do fornecedor ainda podem ser ampliadas. |
 
 ### OWASP Mobile Top 10
 
@@ -150,17 +150,17 @@ Todos os itens do OWASP Mobile Top 10 são **N/A** para esta entrega. Não exist
 
 Foi escolhido o **ASVS Level 1**, adequado ao escopo acadêmico e ao risco principal desta aplicação web. O nível não significa que os controles mais fortes sejam desnecessários; significa que este é o conjunto mínimo usado para organizar a verificação.
 
-| Área ASVS | Requisito aplicável | Evidência | Status |
-|---|---|---|---|
-| V2 Authentication | Senhas devem ter política mínima e hash seguro | `validators.ts` exige 12 caracteres, maiúscula, minúscula, número e símbolo; `auth.ts` usa bcrypt. | Mitigado |
-| V2 Authentication | Proteção contra ataques automatizados | `rateLimit.ts` e `loginGuard.ts`, usados em `auth/login`. | Mitigado |
-| V3 Session Management | Tokens devem expirar e ser revogáveis | `auth.ts`, `sessions.ts`, cookies HTTP-only, access de 15 min e logout/revogação. | Mitigado |
-| V3 Session Management | Separação de refresh token | Cookie com caminho `/api/auth/refresh`, rotação e hash persistido. | Mitigado |
-| V4 Access Control | Autorização no servidor | `authorize.ts` e `requireRole` nas rotas de API. | Mitigado |
-| V5 Validation | Validar tipo, tamanho e formato da entrada | `body.ts` e schemas de `validators.ts`. | Mitigado |
-| V5 Validation | Rejeitar payloads excessivos ou complexos | 32 KB, 20 níveis e 2.000 nós em `body.ts`. | Mitigado |
-| V7 Error Handling | Não vazar detalhes internos | `errors.ts`, `errorResponse` e mensagens seguras nas rotas. | Mitigado |
-| V7 Error Handling | Registrar eventos de segurança | `logger.ts`, auditoria cifrada e `GET /api/audit`. | Parcialmente mitigado |
+| Área ASVS | Requisito aplicável | Evidência |
+|---|---|---|
+| V2 Authentication | Senhas devem ter política mínima e hash seguro | `validators.ts` exige 12 caracteres, maiúscula, minúscula, número e símbolo; `auth.ts` usa bcrypt. |
+| V2 Authentication | Proteção contra ataques automatizados | `rateLimit.ts` e `loginGuard.ts`, usados em `auth/login`. |
+| V3 Session Management | Tokens devem expirar e ser revogáveis | `auth.ts`, `sessions.ts`, cookies HTTP-only, access de 15 min e logout/revogação. |
+| V3 Session Management | Separação de refresh token | Cookie com caminho `/api/auth/refresh`, rotação e hash persistido. |
+| V4 Access Control | Autorização no servidor | `authorize.ts` e `requireRole` nas rotas de API. |
+| V5 Validation | Validar tipo, tamanho e formato da entrada | `body.ts` e schemas de `validators.ts`. |
+| V5 Validation | Rejeitar payloads excessivos ou complexos | 32 KB, 20 níveis e 2.000 nós em `body.ts`. |
+| V7 Error Handling | Não vazar detalhes internos | `errors.ts`, `errorResponse` e mensagens seguras nas rotas. |
+| V7 Error Handling | Registrar eventos de segurança | `logger.ts`, auditoria cifrada e `GET /api/audit`; ainda sem envio para um serviço externo. |
 
 ### Plano de mitigação dos pontos restantes
 
