@@ -11,6 +11,4 @@ Real Playwright console output:
 CSP-specific result:
 	No "Refused to execute inline script", "Refused to execute script" or
 	"Refused to apply inline style" message was emitted. The two errors above are
-	application/resource responses, not CSP violations. No screenshot is claimed
-	here because the previous PNG was a solid-color capture without a visible
-	DevTools console and was removed.
+	application/resource responses, not CSP violations.
